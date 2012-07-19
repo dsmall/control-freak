@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JeeLabs LCD Plug demo</title>
+    {% include "include/rascal-head.html" %}
+    <style>
+        .lcd-frame {
+            margin: 10px 0 20px;
+            border: 10px solid #333;
+            padding: 5px 15px 10px;
+            background-color: #3464c6;
+            display: inline-block;
+        }
+        #line1, #line2 {
+            margin: 0;
+            padding: 2px 0;
+            border-style: none;
+            font-family: 'VT323', 'Courier', sans-serif;
+            font-size: 60px;
+            color: #fff;
+            background-color: #3464c6;
+            width: 405px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>JeeLabs I2C LCD Plug demo</h1>
+            <p>Enter some text to send to the LCD display</p>
+            <span class="well lcd-frame">
+                <input id="line1" type="text" value="Science and" /><br/>
+                <input id="line2" type="text" value="the Arts" />
+            </span><br/>
+            <input id="send-to-lcd" type="button" value="Send to LCD" class="btn btn-large btn-danger rascal" alt="Send to LCD">
+            <input id="clear-lcd" type="button" value="Clear LCD" class="btn btn-large btn-primary rascal" alt="Clear LCD">
+        </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+        $('#send-to-lcd').click( function() {
+            $.post('/send-to-i2c-lcd', { line1: $('#line1').val(), line2: $('#line2').val() });
+        });
+        $('#clear-lcd').click( function() {
+            $.post('/clear-i2c-lcd');
+            $('#line1').val('');
+            $('#line2').val('');
+        });
+    </script>
+</body>
+</html>

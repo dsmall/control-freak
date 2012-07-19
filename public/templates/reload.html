@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Reload Editor</title>
+    {% include "include/rascal-head.html" %}
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>Useful Commands</h1>
+            <p>Some commands for the Rascal dev environment.</p>
+            <input id="reload" type="button" value="Reload editor" class="btn btn-large btn-danger rascal" alt="Reload editor" />
+        </div>
+    </div> <!-- /container -->
+
+    <script language="javascript" type="text/javascript">
+        $('#reload').click(function () {
+            "use strict";
+            $.post('/reload', function (response) {
+                console.log('reload: normal: ' + response);
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                console.log('reload: ' + textStatus + ': ' + errorThrown);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -185,6 +185,7 @@ def sprinkler():
 
 ##### The following procedures support sending email via SMTP #####
 # They are used by email.html. Configure smtp settings in smtp_lib.py
+@public.route('/')
 @public.route('/email.html')
 def email_form():
     import smtp_lib
@@ -210,7 +211,7 @@ def send_email():
     return json.dumps(data)
 ##### End of email procedures
 
-#### The following procedures support file upload #####
+##### The following procedures support file upload #####
 # They are called from rascal-1.03.js and used by upload-cf.html, upload-dd.html and album.html
 def allowed_file(filename):
     return '.' in filename and \
@@ -293,12 +294,12 @@ def clear_directory():
 # Called from hello.html
 @public.route('/flash_led', methods=['POST'])
 def flash_led():
-    import pytronics
-    if pytronics.digitalRead('LED') == '1':
-        pytronics.digitalWrite('LED', 'LOW')
+    from pytronics import digitalRead, digitalWrite
+    if digitalRead('LED') == '1':
+        digitalWrite('LED', 'LOW')
         message = "LED off"
     else:
-        pytronics.digitalWrite('LED', 'HIGH')
+        digitalWrite('LED', 'HIGH')
         message = "LED on"
     return (message)
 
@@ -310,6 +311,125 @@ def read_temp():
     strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
     return strTemp
 
+# dsmall private branch
+@rbtimer(5)
+def toggle_led(num):
+    from pytronics import digitalRead, digitalWrite
+    if digitalRead('LED') == '1':
+        digitalWrite('LED', 'LOW')
+    else:
+        digitalWrite('LED', 'HIGH')
+
+@cron(0, -6, -1, -1, -1)
+def ntp_daemon(num):
+    import subprocess
+    cmd = 'ntpdate uk.pool.ntp.org'
+    subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    try:
+        data = subp.communicate()[0].strip()
+        print '## NTPD ## ' + data
+    except:
+        print '## NTPD ## Failed.'
+
+@public.route('/scope_analog', methods=['POST'])
+def scope_analog():
+    from pytronics import analogRead, digitalRead, i2cRead
+    import json, time
+    try:
+        ad_ref = float(request.form['adref'])
+    except KeyError:
+        ad_ref = 3.3
+    if digitalRead('LED') == '1':
+        strLED = "LED is on"
+    else:
+        strLED = "LED is off"
+    temp = i2cRead(0x48, 0, 'W')
+    strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
+    data = {
+        "time" : float(time.time()),
+        "A0" : float(analogRead('A0')) * ad_ref / 1024.0,
+        "date" : time.strftime("%d %b %Y %H:%M:%S %Z", time.localtime()),
+        "led" : strLED,
+        "temp" : strTemp
+    }
+    return json.dumps(data)
+
+# Reload editor button
+@public.route('/reload', methods=['POST'])
+def reload():
+    import subprocess
+    res = subprocess.call(['touch', '/etc/uwsgi/editor.ini'])
+    if res <> 0:
+        return 'Bad request', 400
+    return 'OK', 200
+
+headlines = ['No news']
+lastUpdate = 12
+
+@rbtimer(5)
+def update_lcd(num):
+    from pytronics import i2cRead
+    from i2c_lcd import reset, writeString, setCursor
+    import time
+    reset()
+    writeString(time.strftime("%H:%M:%S %Z", time.localtime()))
+    setCursor(1, 0)
+    temp = i2cRead(0x48, 0, 'W')
+    writeString('Temp {0:0.1f}'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625))
+    writeString(chr(0xdf) + 'C')
+
+@public.route('/send-to-i2c-lcd', methods=['POST'])
+def send_to_i2c_lcd():
+    from i2c_lcd import reset, writeString, setCursor
+    reset()
+    writeString(request.form['line1'])
+    setCursor(1, 0)
+    writeString(request.form['line2'])
+    return 'OK', 200
+
+@public.route('/clear-i2c-lcd', methods=['POST'])
+def clear_i2c_lcd():
+    from i2c_lcd import reset
+    reset()
+    return 'OK', 200
+
+headlines = [ { 'title' : 'No news yet' } ]
+lastFeed = 0
+lastSlot = 20
+lastUpdate = 'Not known'
+
+@public.route('/headlines', methods=['POST'])
+def headlines():
+    global headlines, lastFeed, lastSlot, lastUpdate
+    from pytronics import i2cRead
+    from news import getHeadlines
+    import json, time
+    try:
+        feed = int(request.form['feed'])
+    except KeyError:
+        feed = 0
+    temp = i2cRead(0x48, 0, 'W')
+    strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
+    now = time.localtime()
+    # Update headlines every five minutes
+    slot = now.tm_min / 5
+    if feed != lastFeed or slot != lastSlot:
+        headlines = getHeadlines(feed)
+        lastFeed = feed
+        lastSlot = slot
+        lastUpdate = time.strftime("%H:%M %Z", now)
+        updated = True
+    else:
+        updated = False
+    data = {
+        "date" : time.strftime("%a, %d %b %Y %H:%M %Z", now),
+        "temp" : strTemp,
+        "headlines" : headlines,
+        "updated" : updated,
+        "lastUpdate" : lastUpdate
+    }
+    return json.dumps(data)
+# end dsmall private
 
 if __name__ == "__main__":
     public.run(host='127.0.0.1:5000', debug=True)

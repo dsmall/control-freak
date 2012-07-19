@@ -14,15 +14,15 @@ def sendmail(sender, recipients, subject, body):
     # If your ISP doesn't provide an SMTP service, you can sign up with gmail
     # These settings are correct for gmail SMTP but you will need to provide
     # a LOCAL_HOST name for your Rascal and your gmail LOGIN and PASSWORD
-    HOST = 'smtp.gmail.com'     # Outgoing mail server
-    PORT = 587                  # Usually 25 or 587
-    LOCAL_HOST = 'rascalNN'     # Name of your Rascal
+    HOST = 'smtp.aa.net.uk'     # Outgoing mail server
+    PORT = 25                   # Usually 25 or 587
+    LOCAL_HOST = 'rascal24'     # Name of your Rascal
     TIMEOUT = 30.0              # Seconds
 
     # Fill in this section if the SMTP server requires TLS (gmail does)
-    USE_TLS = True              # True or False
-    LOGIN = 'username@gmail.com'
-    PASSWORD = 'YourGmailPassword'
+    USE_TLS = False             # True or False
+    LOGIN = ''
+    PASSWORD = ''
     
     ##### END OF SET UP #####
     
@@ -72,18 +72,17 @@ def sendmail_log(resdict):
 
 def sender():
     # Delete the next line, uncomment the following line and fill in your Rascal name and email address
-    sender = ''
-    # sender='rascalNN <username@gmail.com>'
+    sender = 'rascal24 <davids@hlh.co.uk>'
     return sender
 
 def help():
     help = ''
     ##### Delete this section to remove the help message  #####
-    help = 'Before using this page, please edit smtp_lib.py and \
-    enter details of the SMTP server you will be using to send email. To get rid of this message and \
-    automatically fill in the Sender email address, edit procedures help and sender in smtp_lib.py. \
-    After making these changes, remember to click the Reload pytronics button to ensure \
-    that the server is running the latest version of the code.'
+#     help = 'Before using this page, please edit smtp_lib.py and \
+#     enter details of the SMTP server you will be using to send email. To get rid of this message and \
+#     automatically fill in the Sender email address, edit procedures help and sender in smtp_lib.py. \
+#     After making these changes, remember to click the Reload pytronics button to ensure \
+#     that the server is running the latest version of the code.'
     ##### Delete up to here #####
     return help
 

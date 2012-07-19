@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>BBC News - Headlines</title>
+    {% include "include/rascal-head.html" %}
+    <style>
+        hr {
+            border-top-color: #bbb;
+            border-bottom-color: #ccc;
+        }
+        .well.lcd-frame {
+            margin: 0;
+            border: 10px solid #333;
+            color: #ccc;
+            background-color: #3464c6;
+            display: inline-block;
+        }
+        .date {
+            font-size: 36px;
+            padding-bottom: 24px;
+        }
+        .title {
+            font-size: 24px;
+            padding-bottom: 5px;
+        }
+        .description {
+            padding-right: 0;
+            padding-bottom: 3px;
+        }
+        .description span, a, a:hover {
+            font-size: 14px;
+            color: #ccc;
+        }
+        .temp {
+            margin: 0 auto;
+            padding: 75px 25px;
+            font-family: "URW Gothic L", sans-serif;
+            font-size: 48px;
+        }
+        .tailline {
+            margin-bottom: 0;
+        }
+        .lastUpdate {
+            padding-top: 5px;
+            font-size: 13px;
+        }
+        label {
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well lcd-frame">
+            <hr/>
+            <div class="row">
+                <div class="span8">
+                    <div id="date" class="date">&nbsp;</div>
+                    <div id="title" class="title news">&nbsp;</div>
+                    <div id="description" class="description news">&nbsp;</div>
+                    <div class="description news">
+                        <span id="pubDate">&nbsp;</span>
+                        <span id="link">&nbsp;</span>
+                    </div>
+               </div>
+                <div class="span3">
+                    <div id="temp" class="temp">&nbsp;</div>
+                </div>
+            </div>
+            <hr class="tailline" />
+            <div class="row">
+                <div class="span2">
+                    <div id="lastUpdate" class="lastUpdate">&nbsp;</div>
+                </div>
+                <div class="span9">
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="0" checked="checked" />
+                                Top Stories
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="1" />
+                                World
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="2" />
+                                UK
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="3" />
+                                US &amp; Canada
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="4" />
+                                Science
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="5" />
+                                Technology
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="6" />
+                                Arts
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="7" />
+                                Business
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="newsButtons" value="8" />
+                                Latest
+                            </label>
+                        </div>
+                    </div>
+                </div> <!-- /span9 -->
+            </div>
+        </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+        
+        var
+            interval = 15000,
+            counter = 0,
+            int_timer;
+
+        function headlines() {
+            var feed = $('input:radio:checked').attr('value');
+            
+            $.post('/headlines', { feed: feed }, function (response) {
+                var
+                    data = $.parseJSON(response),
+                    headlines = data["headlines"],
+                    updated = data["updated"],
+                    headline;
+                $('#date').text(data["date"]);
+                $('#temp').text(data["temp"]);
+                $('#lastUpdate').text('BBC News ' + data["lastUpdate"]);
+                if (updated || (counter >= 12)) {
+                    counter = 0;
+                }
+                if (counter >= headlines.length) {
+                    counter = 0;
+                }
+                headline = headlines[counter]
+                $('.news').fadeOut(500, 0, function () {
+                    $('#title').text(headline["title"]);
+                    $('#description').text(headline["description"]);
+                    $('#pubDate').text(headline["pubDate"]);
+                    $('#link').html('<a href="' + headline["link"] + '" target="bbc">Read more</a> &#8227;');
+                    $('.news').fadeTo(500, 1);
+                });
+            });
+            counter += 1;
+        }
+        
+        $('input:radio').click(function () {
+            int_timer = clearInterval(int_timer);
+            headlines();
+            int_timer = setInterval(headlines, interval);
+        });
+
+        $(document).ready(function () {
+            headlines();
+            int_timer = setInterval(headlines, interval);
+        });
+    </script>
+</body>
+</html>
