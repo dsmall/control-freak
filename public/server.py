@@ -49,9 +49,16 @@ def i2cget(addr, reg, mode):
     from pytronics import i2cRead
     iaddr = int(addr, 0)
     ireg = int(reg, 0)
-    res = i2cRead(iaddr, ireg, mode)
-    print '## i2cget ## {0}'.format(res)
-    return str(res)
+    try:
+        res = i2cRead(iaddr, ireg, mode)
+        print '## i2cget ## {0}'.format(res)
+        return str(res)
+    except (OSError, IOError) as e:
+        import errno
+        print '## i2cget ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        return str(-1)
+    except Exception as e:
+        return 'Internal server error', 500
 
 @public.route('/i2cset/<addr>/<reg>/<val>/<mode>')
 def i2cset(addr, reg, val, mode):
@@ -59,9 +66,16 @@ def i2cset(addr, reg, val, mode):
     iaddr = int(addr, 0)
     ireg = int(reg, 0)
     ival = int(val, 0)
-    res = i2cWrite(iaddr, ireg, ival, mode)
-    print '## i2cset ## {0}'.format(res)
-    return str(res)
+    try:
+        i2cWrite(iaddr, ireg, ival, mode)
+        print '## i2cset ##'
+        return str(0)
+    except (OSError, IOError) as e:
+        import errno
+        print '## i2cset ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        return str(-1)
+    except Exception as e:
+        return 'Internal server error', 500
 
 @public.route('/i2cscan', methods=['POST'])
 def i2cscan():
