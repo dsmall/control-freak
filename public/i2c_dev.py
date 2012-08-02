@@ -179,9 +179,14 @@ def scanBus(first = 0x03, last = 0x77):
     os.close(file)
     return scan
 
+def BCD(b):
+    return ((b / 10) << 4) + (b % 10)
+
 if False:
-    if False:
-        print scanBus()
+    if True:
+        temp = _i2cRead(0x48, 0, 'I', 2)
+        t = ((temp[0] << 4) | (temp[1] >> 4)) / 16.0
+        print t
     else:
         import errno
         try:
@@ -203,13 +208,28 @@ else:
     # print 'Length of array {0}, {1}, IsArray={2}'.format(len(values), type(values), isinstance(values, array))
     values = _i2cRead(0x68, 0, 'I', 7)
     print 'Returned length {0}, {1}'.format(len(values), values)
-    
+
+    for i in range(len(values)):
+        print '{0:02x}'.format(values[i])
+
     print 'RTC time 20{0:02X}-{1:02X}-{2:02X} {3:02X}:{4:02X}:{5:02X}'.format(values[6], values[5], values[4], values[2], values[1], values[0])
     print 'Rascal time {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime()))
-    
-    values = _i2cRead(0x48, 0, 'I', 2)
-    print 'Returned length {0}, 0x{1:02X}, 0x{2:02X}'.format(len(values), values[0], values[1])
 
+    t = time.gmtime()
+    values = []
+    
+    values.append(BCD(t.tm_sec))
+    values.append(BCD(t.tm_min))
+    values.append(BCD(t.tm_hour))
+    values.append(BCD(t.tm_wday + 1))
+    values.append(BCD(t.tm_mday))
+    values.append(BCD(t.tm_mon))
+    values.append(BCD(t.tm_year - 2000))
+    
+    for i in range(len(values)):
+        print '{0:02x}'.format(values[i])
+        
+    _i2cWrite(0x68, 0, values, 'I')
 
 
 

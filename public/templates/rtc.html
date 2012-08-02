@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>RTC DS1340</title>
+    {% include "include/rascal-head.html" %}
+    <style>
+        .well.lcd-frame {
+            margin: 10px 0;
+            border: 10px solid #333;
+            color: #ccc;
+            background-color: #3464c6;
+            width: 722px;
+            display: inline-block;
+        }
+        .timestamp {
+            margin: 0 auto;
+            padding: 30px 0 20px;
+            font-family: monaco;
+            font-size: 3em;
+            width: 570px;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        
+        <div class="well rascal">
+            
+            <div class="row">
+                <div class="span10">
+                    <div class="well lcd-frame">
+                        <h1>RTC DS1340</h1>
+                        <div id="timestamp" class="timestamp">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="span5">
+                    <button id="set_rtc" class="btn btn-large btn-danger rascal">Set time</button>
+                </div>
+                <div class="span5">
+                    <span style="float: right">
+                        <button id="start" class="btn btn-large btn-success rascal">Start</button>
+                        <button id="reset" class="btn btn-large btn-default rascal">Reset</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <script language="javascript" type="text/javascript">
+        
+        var int_timer;
+        
+        function get_digits(v) {
+            return ('00' + parseInt(v).toString(16)).substr(-2);
+        }
+        
+        function display_time(time) {
+            var s = '20';
+            s += get_digits(time[6]) + '-';
+            s += get_digits(time[5]) + '-';
+            s += get_digits(time[4]) + ' ';
+            s += get_digits(time[2]) + ':';
+            s += get_digits(time[1]) + ':';
+            s += get_digits(time[0]);
+            $('#timestamp').text(s);
+        }
+
+        function read_rtc() {
+            $.post('/rtc', function (response) {
+                display_time(JSON.parse(response));
+            });
+        }
+
+        $('#set_rtc').click(function () {
+            // Also sets int_timer to undefined
+            int_timer = clearInterval(int_timer);
+            $('#timestamp').text('Please wait...');
+            $.post('/rtc', { command: 'set_rtc' }, function (response) {
+                display_time(JSON.parse(response));
+                int_timer = setInterval(read_rtc, 1000);
+            });
+        });
+
+        $(document).ready(function () {
+            read_rtc();
+            int_timer = setInterval(read_rtc, 1000);
+        });
+    
+    </script>
+</body>
+</html>

@@ -321,9 +321,16 @@ def flash_led():
 @public.route('/read_temp', methods=['POST'])
 def read_temp():
     from pytronics import i2cRead
-    temp = i2cRead(0x48, 0, 'W')
-    strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
-    return strTemp
+    try:
+        temp = i2cRead(0x48, 0, 'I', 2)
+        strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) / 16.0, unichr(176))
+        return strTemp
+    except (OSError, IOError) as e:
+        import errno
+        print '## i2cget ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        return 'Can\'t read from TMP102 (see log)'
+    except Exception as e:
+        return 'Internal server error', 500
 
 # dsmall private branch
 @rbtimer(5)
@@ -357,8 +364,8 @@ def scope_analog():
         strLED = "LED is on"
     else:
         strLED = "LED is off"
-    temp = i2cRead(0x48, 0, 'W')
-    strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
+    temp = i2cRead(0x48, 0, 'I', 2)
+    strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625, unichr(176))
     data = {
         "time" : float(time.time()),
         "A0" : float(analogRead('A0')) * ad_ref / 1024.0,
@@ -388,8 +395,8 @@ def update_lcd(num):
     reset()
     writeString(time.strftime("%H:%M:%S %Z", time.localtime()))
     setCursor(1, 0)
-    temp = i2cRead(0x48, 0, 'W')
-    writeString('Temp {0:0.1f}'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625))
+    temp = i2cRead(0x48, 0, 'I', 2)
+    writeString('Temp {0:0.1f}'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625))
     writeString(chr(0xdf) + 'C')
 
 @public.route('/send-to-i2c-lcd', methods=['POST'])
@@ -422,8 +429,8 @@ def headlines():
         feed = int(request.form['feed'])
     except KeyError:
         feed = 0
-    temp = i2cRead(0x48, 0, 'W')
-    strTemp = '{0:0.1f}{1}C'.format(((temp % 0x0100 * 16) + (temp / 0x1000)) * 0.0625, unichr(176))
+    temp = i2cRead(0x48, 0, 'I', 2)
+    strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625, unichr(176))
     now = time.localtime()
     # Update headlines every five minutes
     slot = now.tm_min / 5
@@ -443,6 +450,41 @@ def headlines():
         "lastUpdate" : lastUpdate
     }
     return json.dumps(data)
+
+def BCD(b):
+    return ((b / 10) << 4) + (b % 10)
+
+def set_rtc ():
+    import subprocess
+    import time
+    from pytronics import i2cWrite
+    cmd = 'ntpdate uk.pool.ntp.org'
+    subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    try:
+        data = subp.communicate()[0].strip()
+        t = time.gmtime()
+        rtc = []
+        rtc.append(BCD(t.tm_sec))
+        rtc.append(BCD(t.tm_min))
+        rtc.append(BCD(t.tm_hour))
+        rtc.append(BCD(t.tm_wday + 1))
+        rtc.append(BCD(t.tm_mday))
+        rtc.append(BCD(t.tm_mon))
+        rtc.append(BCD(t.tm_year - 2000))
+        i2cWrite(0x68, 0, rtc, 'I')
+    except:
+        print '## set_rtc ## Failed to set time'
+
+@public.route('/rtc', methods=['POST'])
+def rtc():
+    from pytronics import i2cRead
+    import json
+    if 'command' in request.form:
+        command = request.form['command']
+        if command == 'set_rtc':
+            set_rtc()
+    return json.dumps(i2cRead(0x68, 0, 'I', 7))
+
 # end dsmall private
 
 if __name__ == "__main__":
