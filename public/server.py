@@ -472,18 +472,50 @@ def set_rtc ():
         rtc.append(BCD(t.tm_mon))
         rtc.append(BCD(t.tm_year - 2000))
         i2cWrite(0x68, 0, rtc, 'I')
+        # Reset OSF (oscillator stopped flag)
+        i2cWrite(0x68, 0x09, 0, 'B')
     except:
         print '## set_rtc ## Failed to set time'
 
 @public.route('/rtc', methods=['POST'])
 def rtc():
-    from pytronics import i2cRead
+    from pytronics import i2cRead, i2cWrite
     import json
     if 'command' in request.form:
         command = request.form['command']
         if command == 'set_rtc':
             set_rtc()
+        elif command == 'start':
+            i2cWrite(0x68, 0, i2cRead(0x68, 0) & 0x7f)
+        elif command == 'stop':
+            i2cWrite(0x68, 0, i2cRead(0x68, 0) | 0x80)
+        elif command == 'reset':
+            i2cWrite(0x68, 0, [0x80, 0, 0], 'I')
     return json.dumps(i2cRead(0x68, 0, 'I', 7))
+
+PCA_INC_NONE = 0
+PCA_INC_ALL = 0x80      # 0x00-0x1B (28)
+PCA_INC_BRI = 0xA0      # 0x02-0x11 (16)
+PCA_INC_GCR = 0xC0      # 0x12-0x13 (2)
+PCA_INC_BRI_GCR = 0xE0  # 0x02-0x13 (18)
+
+@public.route('/dimmer', methods=['POST'])
+def dimmer():
+    from pytronics import i2cRead, i2cWrite
+    import json
+    try:
+        if 'command' in request.form:
+            command = request.form['command']
+            if command == 'read_status':
+                return json.dumps(i2cRead(0x40, PCA_INC_ALL | 0, 'I', 28))
+            elif command == 'set_brightness':
+                ireg = int(request.form['register'], 0)
+                ival = int(request.form['value'], 0)
+                i2cWrite(0x40, ireg, ival, 'B')
+                return 'OK', 200
+    except Exception as e:
+        print '## dimmer ##: {0}'.format(e)
+    return 'Internal server error', 500
 
 # end dsmall private
 

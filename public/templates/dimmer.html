@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LED Driver PCA9635</title>
+    {% include "include/rascal-head.html" %}
+    <script src="/static/js/jquery.knob-1.2.0.js"></script>
+    <script>
+        var channels = {
+            red: 0x02,
+            green: 0x03,
+            blue: 0x04,
+            brightness: 0x12
+        };
+        
+        var delay = (function () {
+            var timer = 0;
+            return function(callback, ms) {
+                clearTimeout (timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+        
+        function setDriver(which, value) {
+            var
+                channel = which.split('_').pop(),
+                reg = channels[channel];
+            if (value < 0) {
+                value = 0;
+            } else if (value > 255) {
+                value = 255;
+            }
+            console.log(channel + ' ' + reg + ': ' + value);
+            $.post('/dimmer', { command: 'set_brightness', register: reg, value: value });
+        }            
+
+        $(function () {
+            $(".knob").knob( {
+                change : function (value) {
+                    var which = this.$.attr('id');
+                    delay(function () {
+                        setDriver(which, value);
+                    }, 100);
+                    // console.log("change : " + value);
+                },
+                release : function (value) {
+                    // console.log("release : " + value);
+                },
+                cancel : function () {
+                    console.log("cancel : " + this.value);
+                },
+                draw : function () {
+                    if(this.$.data('skin') == 'tron') {
+
+                        var a = this.angle(this.cv),    // Angle
+                            sa = this.startAngle,       // Previous start angle
+                            sat = this.startAngle,      // Start angle
+                            ea,                         // Previous end angle
+                            eat = sat + a,              // End angle
+                            r = 1;
+                        
+                        this.g.lineWidth = this.lineWidth;
+                        
+                        this.o.cursor
+                            && (sat = eat - 0.3)
+                            && (eat = eat + 0.3);
+                        
+                        if (this.o.displayPrevious) {
+                            ea = this.startAngle + this.angle(this.v);
+                            this.o.cursor
+                                && (sa = ea - 0.3)
+                                && (ea = ea + 0.3);
+                            this.g.beginPath();
+                            this.g.strokeStyle = this.pColor;
+                            this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sa, ea, false);
+                            this.g.stroke();
+                        }
+                        
+                        this.g.beginPath();
+                        this.g.strokeStyle = r ? this.o.fgColor : this.fgColor ;
+                        this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sat, eat, false);
+                        this.g.stroke();
+                        
+                        this.g.lineWidth = 2;
+                        this.g.beginPath();
+                        this.g.strokeStyle = this.o.fgColor;
+                        this.g.arc( this.xy, this.xy, this.radius - this.lineWidth + 1 + this.lineWidth * 2 / 3, 0, 2 * Math.PI, false);
+                        this.g.stroke();
+                        
+                        return false;
+                    }
+                }
+            });
+        });
+    </script>
+    <style>
+        .well.knobset {
+            margin: 10px 0;
+            color: #F8F8F8;
+            background-color: #222;
+            width: 700px;
+        }
+        .knobframe {
+            margin: 0 auto;
+            border: 1px solid #555;
+            -webkit-border-radius: 4px;
+               -moz-border-radius: 4px;
+                    border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>LED Driver PCA9635</h1>
+            <div class="well knobset">
+                <div class="row">
+                    <div class="span6">
+                        <div class="knobframe" style="width: 460px;">
+                            <input id="knob_red" class="knob" data-width="150" data-displayPrevious="true" data-fgColor="#ee4444" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <input id="knob_green" class="knob" data-width="150" data-displayPrevious="true" data-fgColor="#55ee55" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <input id="knob_blue" class="knob" data-width="150" data-displayPrevious="true" data-fgColor="#6666ee" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <p>Set RGB</p>
+                        </div>
+                    </div>
+                    <div class="span3">
+                        <div class="knobframe" style="width: 150px;">
+                            <input id="knob_brightness" class="knob" data-width="150" data-displayPrevious="true" data-fgColor="#aaaaaa" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <p>Set Brightness</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+        function read_status() {
+            $.post('/dimmer', {command: 'read_status' }, function (response) {
+                var status = JSON.parse(response);
+                $('#knob_red')
+                    .val(status[channels.red])
+                    .trigger('change');
+                $('#knob_green')
+                    .val(status[channels.green])
+                    .trigger('change');
+                $('#knob_blue')
+                    .val(status[channels.blue])
+                    .trigger('change');
+                $('#knob_brightness')
+                    .val(status[channels.brightness])
+                    .trigger('change');
+            });
+        }
+        
+        $(document).ready(function () {
+            read_status();
+        });
+    </script>
+</body>
+</html>

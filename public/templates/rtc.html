@@ -39,10 +39,11 @@
             <div class="row">
                 <div class="span5">
                     <button id="set_rtc" class="btn btn-large btn-danger rascal">Set time</button>
+                    <!-- <input type="color" value="#3464c6" /> -->
                 </div>
                 <div class="span5">
                     <span style="float: right">
-                        <button id="start" class="btn btn-large btn-success rascal">Start</button>
+                        <button id="start" class="btn btn-large btn-success disabled rascal">Start</button>
                         <button id="reset" class="btn btn-large btn-default rascal">Reset</button>
                     </span>
                 </div>
@@ -52,37 +53,91 @@
     </div>
     <script language="javascript" type="text/javascript">
         
-        var int_timer;
+        var
+            showDate = true,
+            firstTime = false,
+            int_timer;
         
         function get_digits(v) {
             return ('00' + parseInt(v).toString(16)).substr(-2);
         }
         
         function display_time(time) {
-            var s = '20';
-            s += get_digits(time[6]) + '-';
-            s += get_digits(time[5]) + '-';
-            s += get_digits(time[4]) + ' ';
+            var s = '';
+            if (showDate) {
+                s = '20';
+                s += get_digits(time[6]) + '-';
+                s += get_digits(time[5]) + '-';
+                s += get_digits(time[4]) + ' ';
+            }
             s += get_digits(time[2]) + ':';
             s += get_digits(time[1]) + ':';
-            s += get_digits(time[0]);
+            s += get_digits(time[0] & 0x7f);
             $('#timestamp').text(s);
+            // console.log(time[0]);
         }
 
         function read_rtc() {
             $.post('/rtc', function (response) {
                 display_time(JSON.parse(response));
+                if (firstTime) {
+                    firstTime = false;
+                    int_timer = clearInterval(int_timer);
+                    int_timer = setInterval(read_rtc, 1000);
+                }
             });
         }
 
-        $('#set_rtc').click(function () {
+        function send_command(cmd) {
             // Also sets int_timer to undefined
             int_timer = clearInterval(int_timer);
-            $('#timestamp').text('Please wait...');
-            $.post('/rtc', { command: 'set_rtc' }, function (response) {
+            $.post('/rtc', { command: cmd }, function (response) {
                 display_time(JSON.parse(response));
-                int_timer = setInterval(read_rtc, 1000);
+                if (cmd == 'set_rtc' || cmd == 'start') {
+                    firstTime = true;
+                    int_timer = setInterval(read_rtc, 1200);
+                }
             });
+        }
+        
+        $('#set_rtc').click(function () {
+            $('#timestamp').text('Please wait...');
+            showDate = true;
+            send_command('set_rtc');
+            $('#start')
+                .addClass('disabled')
+                .removeClass('btn-warning')
+                .addClass('btn-success')
+                .text('Start');
+        });
+
+        $('#start').click(function () {
+            var sb = $('#start'),
+                cmd;
+            if (!sb.hasClass('disabled')) {
+                if (sb.text() == 'Start') {
+                    sb.removeClass('btn-success')
+                        .addClass('btn-warning')
+                        .text('Stop');
+                    cmd = 'start';
+                } else {
+                    sb.removeClass('btn-warning')
+                        .addClass('btn-success')
+                        .text('Start');
+                    cmd = 'stop';
+                }
+                send_command(cmd);
+            }
+        });
+
+        $('#reset').click(function () {
+            showDate = false;
+            send_command('reset');
+            $('#start')
+                .removeClass('disabled')
+                .removeClass('btn-warning')
+                .addClass('btn-success')
+                .text('Start');
         });
 
         $(document).ready(function () {
