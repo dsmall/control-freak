@@ -16,11 +16,8 @@ p {
     line-height: 1.4em;
 }
 
-a.rascal.red {
-    /* color: #9FD4FF; pale blue */
-    /* color: #c6433c; logo red - difficult to read */
-    /* color: OrangeRed; */
-    color: #DC322F; /* solarized red */
+a, a:hover {
+    color: #631D1D;
 }
 
 [class^="icon-"],
@@ -30,6 +27,10 @@ a.rascal.red {
 
 .icon-white {
     background-image: url("/static/images/glyphicons-halflings-white.png");
+}
+
+.jqplot-target {
+    color: #E7E8E9; /* Change jQplot default text color because it matches the Rascal bg color */
 }
 
 /* topbar */
