@@ -33,11 +33,18 @@ def get_public_templates():
 def template(template_name):
     return render_template(template_name + '.html', magic="Hey presto!")
 
-@public.route('/<doc_name>.markdown')
+@public.route('/<doc_name>.md')
 def document(doc_name):
+    return render_markdown('', doc_name)
+
+@public.route('/docs/<doc_name>.md')
+def document_docs(doc_name):
+    return render_markdown('docs/', doc_name)
+
+def render_markdown(path, doc_name):
     import markdown2
-    with open('/var/www/public/templates/' + doc_name + '.markdown', 'r') as mdf:
-        return render_template('markdown.html', markdown=markdown2.markdown(mdf.read()))
+    with open('/var/www/public/templates/' + path + doc_name + '.md', 'r') as mdf:
+        return render_template('markdown.html', title=doc_name, markdown=markdown2.markdown(mdf.read()))
     return 'Not Found', 404
 
 @public.route('/get_markdown', methods=['POST'])
@@ -45,11 +52,15 @@ def get_markdown():
     import markdown2
     doc_name = request.form['docName']
     try:
-        with open('/var/www/public/templates/' + doc_name + '.markdown', 'r') as mdf:
+        with open('/var/www/public/templates/docs/' + doc_name + '.md', 'r') as mdf:
             return markdown2.markdown(mdf.read())
     except:
-        with open('/var/www/public/templates/default.markdown', 'r') as mdf:
-            return markdown2.markdown(mdf.read())
+        try:
+            with open('/var/www/public/templates/' + doc_name + '.md', 'r') as mdf:
+                return markdown2.markdown(mdf.read())
+        except:
+            with open('/var/www/public/templates/docs/default.md', 'r') as mdf:
+                return markdown2.markdown(mdf.read())
     return 'Internal server error', 500
 
 ### Support for pins ###
@@ -530,7 +541,7 @@ def set_rtc ():
         rtc.append(BCD(t.tm_mday))
         rtc.append(BCD(t.tm_mon))
         rtc.append(BCD(t.tm_year - 2000))
-        i2cWrite(0x68, 0, rtc, 'I')
+        pytronics.i2cWrite(0x68, 0, rtc, 'I')
         # Reset OSF (oscillator stopped flag)
         pytronics.i2cWrite(0x68, 0x09, 0, 'B')
     except:
@@ -538,18 +549,19 @@ def set_rtc ():
 
 @public.route('/rtc', methods=['POST'])
 def rtc():
+    from pytronics import i2cRead, i2cWrite
     import json
     if 'command' in request.form:
         command = request.form['command']
         if command == 'set_rtc':
             set_rtc()
         elif command == 'start':
-            pytronics.i2cWrite(0x68, 0, i2cRead(0x68, 0) & 0x7f)
+            i2cWrite(0x68, 0, i2cRead(0x68, 0) & 0x7f)
         elif command == 'stop':
-            pytronics.i2cWrite(0x68, 0, i2cRead(0x68, 0) | 0x80)
+            i2cWrite(0x68, 0, i2cRead(0x68, 0) | 0x80)
         elif command == 'reset':
-            pytronics.i2cWrite(0x68, 0, [0x80, 0, 0], 'I')
-    return json.dumps(pytronics.i2cRead(0x68, 0, 'I', 7))
+            i2cWrite(0x68, 0, [0x80, 0, 0], 'I')
+    return json.dumps(i2cRead(0x68, 0, 'I', 7))
 
 PCA_INC_NONE = 0
 PCA_INC_ALL = 0x80      # 0x00-0x1B (28)
