@@ -126,6 +126,56 @@ def i2cset(addr, reg, val, mode):
     except Exception as e:
         return 'Internal server error', 500
 
+# def i2cRead(addr, reg = 0, size = 'B', length = 0):
+# def _i2cRead(addr, reg = 0, size = '', length = 0):
+@public.route('/i2c_read', methods=['POST'])
+def i2c_read():
+    import json
+    try:
+        params = json.loads(request.form['params'])
+        print '## i2c_read ## ' + str(params)
+        pytronics.i2cRead(params['addr'], params['reg'], params['value'], params['size'])
+        result = {
+            'success': True
+        }
+        return json.dumps(result)
+    except (OSError, IOError) as e:
+        import errno
+        print '## i2c_write ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        result = {
+            'success': False,
+            'errorCode': errno.errorcode[e.errno],
+            'errorMessage': e.strerror
+        }
+        return json.dumps(result)
+    except Exception as e:
+        return 'Internal server error', 500
+
+# def i2cWrite(addr, reg, val = '', size = 'B'):
+# def _i2cWrite(addr, reg, value = '', size = 'B'):
+@public.route('/i2c_write', methods=['POST'])
+def i2c_write():
+    import json
+    try:
+        params = json.loads(request.form['params'])
+        print '## i2c_write ## ' + str(params)
+        pytronics.i2cWrite(params['addr'], params['reg'], params['value'], params['size'])
+        result = {
+            'success': True
+        }
+        return json.dumps(result)
+    except (OSError, IOError) as e:
+        import errno
+        print '## i2c_write ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        result = {
+            'success': False,
+            'errorCode': errno.errorcode[e.errno],
+            'errorMessage': e.strerror
+        }
+        return json.dumps(result)
+    except Exception as e:
+        return 'Internal server error', 500
+
 @public.route('/i2cscan', methods=['POST'])
 def i2cscan():
     from i2c import scanBus

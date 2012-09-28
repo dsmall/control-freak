@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>I2C Write</title>
+    {% include "include/rascal-head.html" %}
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>I2C Write</h1>
+            <p>Some commands for the Rascal dev environment.</p>
+            <input id="set" type="button" value="I2C Write" class="btn btn-large btn-danger rascal" alt="I2C Write" />
+        </div>
+    </div> <!-- /container -->
+
+    <script language="javascript" type="text/javascript">
+        var params = {
+            addr: 0x09,
+            reg: 0x63,
+            value: [0, 5, 8],
+            size: 'I'
+        };
+        $('#set').click(function () {
+            "use strict";
+            $.post('/i2c_write', { params: JSON.stringify(params) }, function (response) {
+                var result = JSON.parse(response);
+                // console.log (response);
+                if (result['success']) {
+                    console.log('i2c_write: success');
+                } else {
+                    console.log('i2c_write: [' + result['errorCode'] + '] ' + result['errorMessage']);
+                }
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                console.log('i2c_write: ' + textStatus + ': ' + errorThrown);
+            });
+        });
+    </script>
+</body>
+</html>
