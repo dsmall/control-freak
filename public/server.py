@@ -134,14 +134,15 @@ def i2c_read():
     try:
         params = json.loads(request.form['params'])
         print '## i2c_read ## ' + str(params)
-        pytronics.i2cRead(params['addr'], params['reg'], params['value'], params['size'])
+        value = pytronics.i2cRead(params['addr'], params['reg'], params['size'], params['length'])
         result = {
-            'success': True
+            'success': True,
+            'value': value
         }
         return json.dumps(result)
     except (OSError, IOError) as e:
         import errno
-        print '## i2c_write ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
+        print '## i2c_read ## Error: [{0}] {1}'.format(errno.errorcode[e.errno], e.strerror)
         result = {
             'success': False,
             'errorCode': errno.errorcode[e.errno],
