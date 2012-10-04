@@ -21,7 +21,7 @@ def default_page():
             name = f.read().strip().capitalize()
     except:
         name = 'Rascal'
-    return render_template('/index.html', hostname=name, template_list = get_public_templates())
+    return render_template('/index.html', hostname=name, template_list=get_public_templates())
 
 def get_public_templates():
     r = []
@@ -31,6 +31,20 @@ def get_public_templates():
         if os.path.isfile(ff):
             r.append(f)
     return sorted(r)
+
+# Format date/time in Jinja template
+@public.template_filter()
+def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
+    return time.strftime(format, value)
+
+# Return current date and time in specified format
+@public.route('/datetime', methods=['POST'])
+def datetime():
+    try:
+        format = request.form['format']
+    except:
+        format = '%d %b %Y %H:%M %Z'
+    return time.strftime(format, time.localtime())
 
 ### Generic HTML and Markdown templates, support for doc tab ###
 @public.route('/<template_name>.html')
@@ -48,7 +62,7 @@ def document_docs(doc_name):
 def render_markdown(path, doc_name):
     import markdown2
     with open('/var/www/public/templates/' + path + doc_name + '.md', 'r') as mdf:
-        return render_template('markdown.html', title=doc_name, markdown=markdown2.markdown(mdf.read()))
+        return render_template('documentation.html', title=doc_name, markdown=markdown2.markdown(mdf.read()))
     return 'Not Found', 404
 
 @public.route('/get_markdown', methods=['POST'])
@@ -224,12 +238,12 @@ def analog():
     }
     return json.dumps(data)
 
-@public.route('/<doc_name>.markdown')
-def document(doc_name):
-    import markdown2
-    with open('/var/www/public/templates/' + doc_name + '.markdown', 'r') as mdfile:
-        return render_template('documentation.html', markdown=markdown2.markdown(mdfile.read()))
-    return 'Not Found', 404
+# @public.route('/<doc_name>.markdown')
+# def document(doc_name):
+#   import markdown2
+#    with open('/var/www/public/templates/' + doc_name + '.markdown', 'r') as mdfile:
+#        return render_template('documentation.html', markdown=markdown2.markdown(mdfile.read()))
+#   return 'Not Found', 404
 
 # relay (also calls analog)
 @public.route('/relay.html')
@@ -488,17 +502,17 @@ def scope_analog():
     except KeyError:
         ad_ref = 3.3
     if pytronics.digitalRead('LED') == '1':
-        strLED = "LED is on"
+        strLED = 'LED is on'
     else:
-        strLED = "LED is off"
+        strLED = 'LED is off'
     temp = pytronics.i2cRead(0x48, 0, 'I', 2)
     strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625, unichr(176))
     data = {
-        "time" : float(time.time()),
-        "A0" : float(pytronics.analogRead('A0')) * ad_ref / 1024.0,
-        "date" : time.strftime("%d %b %Y %H:%M:%S %Z", time.localtime()),
-        "led" : strLED,
-        "temp" : strTemp
+        'time' : float(time.time()),
+        'A0' : float(pytronics.analogRead('A0')) * ad_ref / 1024.0,
+        'date' : time.strftime('%d %b %Y %H:%M:%S %Z', time.localtime()),
+        'led' : strLED,
+        'temp' : strTemp
     }
     return json.dumps(data)
 
@@ -518,7 +532,7 @@ lastUpdate = 12
 def update_lcd(num):
     from i2c_lcd import reset, writeString, setCursor
     reset()
-    writeString(time.strftime("%H:%M:%S %Z", time.localtime()))
+    writeString(time.strftime('%H:%M:%S %Z', time.localtime()))
     setCursor(1, 0)
     temp = pytronics.i2cRead(0x48, 0, 'I', 2)
     writeString('Temp {0:0.1f}'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625))
@@ -562,16 +576,16 @@ def headlines():
         headlines = getHeadlines(feed)
         lastFeed = feed
         lastSlot = slot
-        lastUpdate = time.strftime("%H:%M %Z", now)
+        lastUpdate = time.strftime('%H:%M %Z', now)
         updated = True
     else:
         updated = False
     data = {
-        "date" : time.strftime("%a, %d %b %Y %H:%M %Z", now),
-        "temp" : strTemp,
-        "headlines" : headlines,
-        "updated" : updated,
-        "lastUpdate" : lastUpdate
+        'date' : time.strftime('%a, %d %b %Y %H:%M %Z', now),
+        'temp' : strTemp,
+        'headlines' : headlines,
+        'updated' : updated,
+        'lastUpdate' : lastUpdate
     }
     return json.dumps(data)
 
