@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- JSLint 6 Oct 2012 jQuery $ setValues -->
 <html lang="en">
 <head>
     <title>BlinkM Demo</title>
@@ -9,44 +10,45 @@
     <script src="/static/js/jquery.knob-1.2.0.js"></script>
     <script>
         var delay = (function () {
+            "use strict";
             var timer = 0;
-            return function(callback, ms) {
-                clearTimeout (timer);
+            return function (callback, ms) {
+                clearTimeout(timer);
                 timer = setTimeout(callback, ms);
             };
         })();
 
         $(function () {
-            $(".knob").knob( {
-                change : function (value) {
+            "use strict";
+            $(".knob").knob({
+                change: function (value) {
                     delay(function () {
                         setValues();
                     }, 100);
                     // console.log("change : " + value);
                 },
-                release : function (value) {
+                release: function (value) {
                     setValues();
                     // console.log("release : " + value);
                 },
-                cancel : function () {
+                cancel: function () {
                     // console.log("cancel : " + this.value);
                 },
-                draw : function () {
-                    if(this.$.data('skin') == 'tron') {
-
+                draw: function () {
+                    if (this.$.data('skin') === 'tron') {
                         var a = this.angle(this.cv),    // Angle
                             sa = this.startAngle,       // Previous start angle
                             sat = this.startAngle,      // Start angle
                             ea,                         // Previous end angle
                             eat = sat + a,              // End angle
                             r = 1;
-                        
+
                         this.g.lineWidth = this.lineWidth;
-                        
+
                         this.o.cursor
                             && (sat = eat - 0.3)
                             && (eat = eat + 0.3);
-                        
+
                         if (this.o.displayPrevious) {
                             ea = this.startAngle + this.angle(this.v);
                             this.o.cursor
@@ -57,18 +59,18 @@
                             this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sa, ea, false);
                             this.g.stroke();
                         }
-                        
+
                         this.g.beginPath();
-                        this.g.strokeStyle = r ? this.o.fgColor : this.fgColor ;
+                        this.g.strokeStyle = r ? this.o.fgColor : this.fgColor;
                         this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sat, eat, false);
                         this.g.stroke();
-                        
+
                         this.g.lineWidth = 2;
                         this.g.beginPath();
                         this.g.strokeStyle = this.o.fgColor;
-                        this.g.arc( this.xy, this.xy, this.radius - this.lineWidth + 1 + this.lineWidth * 2 / 3, 0, 2 * Math.PI, false);
+                        this.g.arc(this.xy, this.xy, this.radius - this.lineWidth + 1 + this.lineWidth * 2 / 3, 0, 2 * Math.PI, false);
                         this.g.stroke();
-                        
+
                         return false;
                     }
                 }
@@ -107,19 +109,19 @@
                 <div class="row">
                     <div class="span6">
                         <div class="knobframe" style="width: 460px;">
-                            <input id="knob_red" class="knob" data-width="150" data-height="150" data-displayPrevious="true"
-                                data-fgColor="#ee4444" data-skin="tron" data-thickness=".2" data-max="255" value="0">
-                            <input id="knob_green" class="knob" data-width="150" data-height="150" data-displayPrevious="true"
-                                data-fgColor="#55ee55" data-skin="tron" data-thickness=".2" data-max="255" value="51">
-                            <input id="knob_blue" class="knob" data-width="150" data-height="150" data-displayPrevious="true"
-                                data-fgColor="#6666ee" data-skin="tron" data-thickness=".2" data-max="255" value="78">
+                            <input id="knob_red" class="knob" data-width="150" data-height="150" data-displayprevious="true"
+                                data-fgcolor="#ee4444" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <input id="knob_green" class="knob" data-width="150" data-height="150" data-displayprevious="true"
+                                data-fgcolor="#55ee55" data-skin="tron" data-thickness=".2" data-max="255" value="0">
+                            <input id="knob_blue" class="knob" data-width="150" data-height="150" data-displayprevious="true"
+                                data-fgcolor="#6666ee" data-skin="tron" data-thickness=".2" data-max="255" value="0">
                             <p>Set RGB</p>
                         </div>
                     </div>
                     <div class="span3">
                         <div class="knobframe" style="width: 150px;">
-                            <input id="knob_brightness" class="knob" data-width="150" data-height="150" data-displayPrevious="true"
-                                data-fgColor="#aaaaaa" data-skin="tron" data-thickness=".2" data-max="255" value="255">
+                            <input id="knob_brightness" class="knob" data-width="150" data-height="150" data-displayprevious="true"
+                                data-fgcolor="#aaaaaa" data-skin="tron" data-thickness=".2" data-max="255" value="255">
                             <p>Set Brightness</p>
                         </div>
                     </div>
@@ -155,37 +157,70 @@
     </div>
     <!-- {% include "include/doc-tab.html" %} --> 
     <script type="text/javascript">
-        function writeOutput(r, g, b) {
-            var params = {
-                addr: 0x09,
-                reg: 0x63,
-                value: [r, g, b],
-                size: 'I'
-            };
+        var initialising = false;
+
+        function writeToBlinkM(params) {
+            "use strict";
             $.post('/i2c_write', { params: JSON.stringify(params) }, function (response) {
                 var result = JSON.parse(response);
                 // console.log (response);
-                if (result['success']) {
+                if (result.success) {
                     console.log('i2c_write: success');
                 } else {
-                    console.log('i2c_write: [' + result['errorCode'] + '] ' + result['errorMessage']);
+                    console.log('i2c_write: [' + result.errorCode + '] ' + result.errorMessage);
                 }
             }).error(function (jqXHR, textStatus, errorThrown) {
                 console.log('i2c_write: ' + textStatus + ': ' + errorThrown);
             });
         }
 
+        function stopScript() {
+            "use strict";
+            var params = {
+                addr: 0x09,
+                reg: 0x6f,
+                value: 0,
+                size: 'C'
+            };
+            writeToBlinkM(params);
+        }
+
+        function setFadeSpeed(speed) {
+            "use strict";
+            var params = {
+                addr: 0x09,
+                reg: 0x66,
+                value: speed,
+                size: 'B'
+            };
+            writeToBlinkM(params);
+        }
+
+        function fadeToRGB(r, g, b) {
+            "use strict";
+            var params = {
+                addr: 0x09,
+                reg: 0x63,
+                value: [r, g, b],
+                size: 'I'
+            };
+            writeToBlinkM(params);
+        }
+
         function getValue(which) {
-            var value = parseInt($('#knob_' + which).val());
+            "use strict";
+            var value = parseInt($('#knob_' + which).val(), 10);
             if (value < 0) {
                 return 0;
-            } else if (value > 255) {
+            }
+            if (value > 255) {
                 return 255;
             }
             return value;
         }
-        
+
         function setOutput(r, g, b) {
+            "use strict";
             var sf = getValue('brightness') / 255.0,
                 rs = Math.round(r * sf),
                 gs = Math.round(g * sf),
@@ -196,23 +231,33 @@
             $('#output').css('background-color', outputString);
             console.log('mix ' + rgbString);
             console.log('output ' + outputString);
-            writeOutput(rs, gs, bs);
+            fadeToRGB(rs, gs, bs);
         }
 
         function setValues() {
+            "use strict";
             var r = getValue('red'),
                 g = getValue('green'),
                 b = getValue('blue');
             setOutput(r, g, b);
-        }            
+        }
+
+        $('input').change(function () {
+            "use strict";
+            if (!initialising) {
+                console.log('change ' + $(this).attr('id'));
+                setValues();
+            }
+        });
 
         $('.sl-box.click').click(function () {
+            "use strict";
             var
                 rgbString = $(this).css('background-color'),
                 parts = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/),
-                r = parseInt(parts[1]),
-                g = parseInt(parts[2]),
-                b = parseInt(parts[3]);
+                r = parseInt(parts[1], 10),
+                g = parseInt(parts[2], 10),
+                b = parseInt(parts[3], 10);
             $('#knob_red')
                 .val(r)
                 .trigger('change');
@@ -223,6 +268,47 @@
                 .val(b)
                 .trigger('change');
             setOutput(r, g, b);
+        });
+
+        function getCurrentRGB() {
+            "use strict";
+            var params = {
+                    addr: 0x09,
+                    reg: 0x67,
+                    size: 'I',
+                    length: 3
+                },
+                value;
+            $.post('/i2c_read', { params: JSON.stringify(params) }, function (response) {
+                var result = JSON.parse(response);
+                console.log(response);
+                if (result.success) {
+                    initialising = true;
+                    console.log('i2c_read: success');
+                    value = result.value;
+                    $('#knob_red')
+                        .val(value[0])
+                        .trigger('change');
+                    $('#knob_green')
+                        .val(value[1])
+                        .trigger('change');
+                    $('#knob_blue')
+                        .val(value[2])
+                        .trigger('change');
+                    initialising = false;
+                } else {
+                    console.log('i2c_read: [' + result.errorCode + '] ' + result.errorMessage);
+                }
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                console.log('i2c_read: ' + textStatus + ': ' + errorThrown);
+            });
+        }
+
+        $(document).ready(function () {
+            "use strict";
+            stopScript();
+            setFadeSpeed(10);
+            getCurrentRGB();
         });
     </script>
 </body>

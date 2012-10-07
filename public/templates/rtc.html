@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- JSLint 7 Oct 2012 jQuery $ tolerate bitwise  -->
 <html lang="en">
 <head>
     <title>RTC DS1340</title>
@@ -42,7 +43,7 @@
                     <!-- <input type="color" value="#3464c6" /> -->
                 </div>
                 <div class="span5">
-                    <span style="float: right">
+                    <span style="float: right;">
                         <button id="start" class="btn btn-large btn-success disabled rascal">Start</button>
                         <button id="reset" class="btn btn-large btn-default rascal">Reset</button>
                     </span>
@@ -53,17 +54,19 @@
     </div>
     {% include "include/doc-tab.html" %}
     <script language="javascript" type="text/javascript">
-        
+
         var
             showDate = true,
             firstTime = false,
             int_timer;
-        
+
         function get_digits(v) {
-            return ('00' + parseInt(v).toString(16)).substr(-2);
+            "use strict";
+            return ('00' + parseInt(v, 10).toString(16)).substr(-2);
         }
-        
+
         function display_time(time) {
+            "use strict";
             var s = '';
             if (showDate) {
                 s = '20';
@@ -79,6 +82,7 @@
         }
 
         function read_rtc() {
+            "use strict";
             $.post('/rtc', function (response) {
                 display_time(JSON.parse(response));
                 if (firstTime) {
@@ -90,18 +94,20 @@
         }
 
         function send_command(cmd) {
+            "use strict";
             // Also sets int_timer to undefined
             int_timer = clearInterval(int_timer);
             $.post('/rtc', { command: cmd }, function (response) {
                 display_time(JSON.parse(response));
-                if (cmd == 'set_rtc' || cmd == 'start') {
+                if (cmd === 'set_rtc' || cmd === 'start') {
                     firstTime = true;
                     int_timer = setInterval(read_rtc, 1200);
                 }
             });
         }
-        
+
         $('#set_rtc').click(function () {
+            "use strict";
             $('#timestamp').text('Please wait...');
             showDate = true;
             send_command('set_rtc');
@@ -113,10 +119,11 @@
         });
 
         $('#start').click(function () {
+            "use strict";
             var sb = $('#start'),
                 cmd;
             if (!sb.hasClass('disabled')) {
-                if (sb.text() == 'Start') {
+                if (sb.text() === 'Start') {
                     sb.removeClass('btn-success')
                         .addClass('btn-warning')
                         .text('Stop');
@@ -132,6 +139,7 @@
         });
 
         $('#reset').click(function () {
+            "use strict";
             showDate = false;
             send_command('reset');
             $('#start')
@@ -142,10 +150,11 @@
         });
 
         $(document).ready(function () {
+            "use strict";
             read_rtc();
             int_timer = setInterval(read_rtc, 1000);
         });
-    
+
     </script>
 </body>
 </html>

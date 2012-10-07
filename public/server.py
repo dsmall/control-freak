@@ -6,6 +6,13 @@ import os, time
 public = Flask(__name__)
 public.config['PROPAGATE_EXCEPTIONS'] = True
 
+# Include "no-cache" header in all POST responses
+@public.after_request
+def add_no_cache(response):
+    if request.method == 'POST':
+        response.cache_control.no_cache = True
+    return response
+
 # config for upload
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 ALLOWED_DIRECTORIES = set(['static/uploads/', 'static/pictures/'])
@@ -237,13 +244,6 @@ def analog():
         "A0" : float(pytronics.analogRead('A0')) * ad_ref / 1024.0
     }
     return json.dumps(data)
-
-# @public.route('/<doc_name>.markdown')
-# def document(doc_name):
-#   import markdown2
-#    with open('/var/www/public/templates/' + doc_name + '.markdown', 'r') as mdfile:
-#        return render_template('documentation.html', markdown=markdown2.markdown(mdfile.read()))
-#   return 'Not Found', 404
 
 # relay (also calls analog)
 @public.route('/relay.html')
@@ -567,8 +567,11 @@ def headlines():
         feed = int(request.form['feed'])
     except KeyError:
         feed = 0
-    temp = pytronics.i2cRead(0x48, 0, 'I', 2)
-    strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625, unichr(176))
+    try:
+        temp = pytronics.i2cRead(0x48, 0, 'I', 2)
+        strTemp = '{0:0.1f}{1}C'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625, unichr(176))
+    except:
+        strTemp = ''
     now = time.localtime()
     # Update headlines every five minutes
     slot = now.tm_min / 5

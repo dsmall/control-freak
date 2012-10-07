@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- 28 Dec 2011, 19-27 June 2012 dsmall -->
+<!-- JSLint 7 Oct 2012 jQuery $ -->
 <html lang="en">
 <head>
     <title>Scope Demo</title>
@@ -12,14 +13,12 @@
             font-family: 'VT323', 'Courier', sans-serif;
             font-size: 20px;
         }
-        
         #chart1 {
             margin-top: 20px;
             margin-left: -40px;
             height: 400px;
             width: 800px;
         }
-        
         .jqplot-title, .jqplot-axis {
             color: #ddd;
         }
@@ -38,20 +37,21 @@
             <div id="chart1" style=""></div>
             
             <p>Gain control:</p>
-            <button type="button" class="btn" id="gain_down" onclick="gain_down();">Decrease</button>
-            <button type="button" class="btn" id="gain_up" onclick="gain_up();">Increase</button>
+            <button id="gain_down" type="button" class="btn">Decrease</button>
+            <button id="gain_up" type="button" class="btn">Increase</button>
         </div>
     </div>
     
     <script language="javascript" type="text/javascript">
-        
-        chartOptions = {
+
+        var chartOptions = {
             legend: {
                 show: true,
-                location: "nw" },
+                location: "nw"
+            },
             title: "Channel 0",
             series: [
-                {label: "Channel 0", lineWidth:3, showMarker:false}
+                { label: "Channel 0", lineWidth: 3, showMarker: false }
             ],
             axes: {
                 xaxis: {
@@ -66,47 +66,48 @@
                     min: 0,
                     max: 2.5,
                     numberTicks: 6
-                },
+                }
             },
             seriesColors: [ "#cd2820" ]
         };
-        
+
         var
             degrees = 0,
             deg2rad = 3.14159265 / 180.0,
             gain = 1.0,
-            a0 = new Array(),
+            a0 = [],
             firstTime = true,
             plot1;
 
-        setInterval(function() {
-            $.post("scope_analog", { adref: 3.3 }, function(response) {
+        setInterval(function () {
+            "use strict";
+            $.post("scope_analog", { adref: 3.3 }, function (response) {
                 var
                     data = $.parseJSON(response),
                     i;
-                                
-                $('#strDate').text(data["date"]);
-                $('#strTemp').text(data["temp"]);
-                $('#strLED').text(data["led"]);
-                
+
+                $('#strDate').text(data.date);
+                $('#strTemp').text(data.temp);
+                $('#strLED').text(data.led);
+
                 // Added by dsmall - overwrite A0
                 if (degrees > 350) {
                     degrees = 0;
                 }
                 // data["A0"] = Math.sin(degrees * deg2rad) * gain + 1.25;
                 degrees += 10;
-                
+
                 // Limit to 0 to max (max + 1 points)
-                if(a0.length > chartOptions.axes.xaxis.max) {
+                if (a0.length > chartOptions.axes.xaxis.max) {
                     a0.pop();
                 }
                 // Add new value at beginning
                 a0.unshift([0, data.A0]);
                 // Adjust old X values
-                for (i = 1; i < a0.length; i++) {
+                for (i = 1; i < a0.length; i += 1) {
                     a0[i][0] = i;
                 }
-                
+
                 if (firstTime) {
                     // console.log('firstTime');
                     plot1 = $.jqplot("chart1", [a0], chartOptions);
@@ -123,14 +124,16 @@
                 }
             });
         }, 1000);
-        
-        function gain_up () {
+
+        $("#gain_up").click(function () {
+            "use strict";
             gain *= 2.0;
-        }
-        
-        function gain_down () {
+        });
+
+        $("#gain_down").click(function () {
+            "use strict";
             gain /= 2.0;
-        }
+        });
     </script>
 
 </body>

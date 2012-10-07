@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- JSLint 6 Oct 2012 jQuery $ -->
 <html lang="en">
 <head>
     <title>BBC News - Headlines</title>
@@ -119,49 +120,50 @@
         </div>
     </div>
     <script language="javascript" type="text/javascript">
-        
         var
             interval = 15000,
             counter = 0,
             int_timer;
 
         function headlines() {
+            "use strict";
             var feed = $('input:radio:checked').attr('value');
-            
             $.post('/headlines', { feed: feed }, function (response) {
                 var
                     data = $.parseJSON(response),
-                    headlines = data["headlines"],
-                    updated = data["updated"],
+                    headlines = data.headlines,
+                    updated = data.updated,
                     headline;
-                $('#date').text(data["date"]);
-                $('#temp').text(data["temp"]);
-                $('#lastUpdate').text('BBC News ' + data["lastUpdate"]);
+                $('#date').text(data.date);
+                $('#temp').text(data.temp);
+                $('#lastUpdate').text('BBC News ' + data.lastUpdate);
                 if (updated || (counter >= 12)) {
                     counter = 0;
                 }
                 if (counter >= headlines.length) {
                     counter = 0;
                 }
-                headline = headlines[counter]
+                headline = headlines[counter];
                 $('.news').fadeOut(500, 0, function () {
-                    $('#title').text(headline["title"]);
-                    $('#description').text(headline["description"]);
-                    $('#pubDate').text(headline["pubDate"]);
-                    $('#link').html('<a href="' + headline["link"] + '" target="bbc">Read more</a> &#8227;');
+                    $('#title').text(headline.title);
+                    $('#description').text(headline.description);
+                    $('#pubDate').text(headline.pubDate);
+                    $('#link').html('<a href="' + headline.link + '" target="bbc">Read more<\/a> &#8227;');
                     $('.news').fadeTo(500, 1);
                 });
             });
             counter += 1;
         }
-        
+
         $('input:radio').click(function () {
+            "use strict";
             int_timer = clearInterval(int_timer);
             headlines();
             int_timer = setInterval(headlines, interval);
         });
 
         $(document).ready(function () {
+            "use strict";
             headlines();
             int_timer = setInterval(headlines, interval);
         });
