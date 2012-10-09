@@ -436,7 +436,7 @@ def list_directory():
     except OSError:
         return 'Not Found', 404
     except Exception, e:
-        print '## list_directory ## {}'.format(e)
+        print '## list_directory ## {0}'.format(e)
     return 'Bad request', 400
 
 @public.route('/clear-directory', methods=['POST'])
@@ -454,13 +454,13 @@ def clear_directory():
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
             except Exception, e:
-                print '## clear_directory ## {}'.format(e)
+                print '## clear_directory ## {0}'.format(e)
                 return 'Bad request', 400
         return 'OK', 200
     except OSError:
         return 'Not Found', 404
     except Exception, e:
-        print '## clear_directory ## {}'.format(e)
+        print '## clear_directory ## {0}'.format(e)
     return 'Bad request', 400
 ### End of upload procedures ###
 
@@ -536,10 +536,11 @@ def update_lcd(num):
     localtime = time.localtime()
     writeString(time.strftime('%H:%M:%S %Z', localtime))
     setCursor(1, 0)
-    temp = pytronics.i2cRead(0x48, 0, 'I', 2)
-    writeString('Temp {0:0.1f}'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625))
+    artemp = pytronics.i2cRead(0x48, 0, 'I', 2)
+    ftemp = ((artemp[0] << 4) | (artemp[1] >> 4)) * 0.0625
+    writeString('Temp {0:0.1f}'.format(ftemp))
     writeString(chr(0xdf) + 'C')
-    # log.temperature(localtime, temp)
+    log.temperature(ftemp)
 
 @public.route('/send-to-i2c-lcd', methods=['POST'])
 def send_to_i2c_lcd():
