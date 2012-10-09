@@ -531,12 +531,15 @@ lastUpdate = 12
 @rbtimer(5)
 def update_lcd(num):
     from i2c_lcd import reset, writeString, setCursor
+    import log
     reset()
-    writeString(time.strftime('%H:%M:%S %Z', time.localtime()))
+    localtime = time.localtime()
+    writeString(time.strftime('%H:%M:%S %Z', localtime))
     setCursor(1, 0)
     temp = pytronics.i2cRead(0x48, 0, 'I', 2)
     writeString('Temp {0:0.1f}'.format(((temp[0] << 4) | (temp[1] >> 4)) * 0.0625))
     writeString(chr(0xdf) + 'C')
+    # log.temperature(localtime, temp)
 
 @public.route('/send-to-i2c-lcd', methods=['POST'])
 def send_to_i2c_lcd():
