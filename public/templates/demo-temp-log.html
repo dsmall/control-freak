@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Temperature Log Demo</title>
+    {% include "include/rascal-head.html" %}
+    <script type="text/javascript" src="/static/js/jqplot-plugins/jqplot.dateAxisRenderer.js"></script>
+    <script type="text/javascript" src="/static/js/jqplot-plugins/jqplot.highlighter.js"></script>
+    <style>
+        #chart1 {
+            margin-top: 20px;
+            height: 400px;
+            width: 800px;
+        }
+        .jqplot-title, .jqplot-axis, .status {
+            color: #ddd;
+        }
+        .jqplot-table-legend-label {
+            color: #111;
+        }
+        .btn-group {
+            margin-top: 10px;
+        }
+        img.led {
+            opacity: 0.4;
+        }
+        img.led.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>Temperature Log</h1>
+            <div id="chart1"></div>
+            <div class="btn-group" data-toggle="buttons-radio">
+                <button value="live" class="btn btn-default rascal active" style="width: 120px;">Live</button>
+                <button value="pastday" class="btn btn-default rascal" style="width: 120px;">Past Day</button>
+                <button value="pastweek" class="btn btn-default rascal" style="width: 120px;">Past Week</button>
+            </div>
+            <div>
+                <img id="LED" src="static/images/led.gif" width="10" class="led" />
+                <small id="status" class="status"></small></div>
+            <p></p>
+        </div>
+    </div>
+    <!-- {% include "include/doc-tab.html" %} --> 
+    <script type="text/javascript">
+
+        var chartOptions = {
+            legend: {
+                show: true,
+                location: "ne"
+            },
+            series: [
+                { label: "Temp \u00b0C", lineWidth: 3, showMarker: false }
+            ],
+            axes: {
+                xaxis: {
+                    renderer: $.jqplot.DateAxisRenderer,
+                    tickOptions: {formatString: '%a%n%H:%M'}
+                },
+                yaxis: {
+                    // tickOptions: {formatString: '%0.2f'}
+                }
+            },
+            highlighter: {
+                show: true,
+                sizeAdjust: 7.5
+            },
+            seriesColors: [ "#cd2820" ]
+        };
+
+        var
+            period = 'live',
+            interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000 },
+            int_timer,
+            plot1;
+
+        function updateGraph () {
+            $('#LED').addClass('active');
+            $.post("/getlog", { period: period }, function (response) {
+                var data = $.parseJSON(response);
+                console.log('updateGraph last data ' + data[data.length - 1][0]);
+                $('#chart1').empty();
+                plot1 = $.jqplot('chart1', [data], chartOptions);
+                $('#status').text('Last update ' + new Date());
+                setTimeout(function () {
+                    $('#LED').removeClass('active');
+                }, 500);
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                $('#status').text('Update failed (' + errorThrown + ') ' + new Date());
+                console.log('updateGraph: getlog: ' + textStatus + ': ' + errorThrown);
+            });            
+        }
+        
+        $('.btn').click(function () {
+            int_timer = clearInterval(int_timer);
+            period = $(this).attr('value');
+            console.log('change ' + period + ' (' + (interval[period] / 1000).toString() + ')');
+            updateGraph();
+            int_timer = setInterval(updateGraph, interval[period]);
+        });
+        
+        $(document).ready(function () {
+            "use strict";
+            period = 'live'
+            updateGraph();
+            int_timer = setInterval(updateGraph, interval[period]);
+        });
+    </script>
+</body>
+</html>
