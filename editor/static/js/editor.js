@@ -124,7 +124,7 @@ function clearLocation() {
 }
 
 // Load a new picture or file. For files, change tracking is resumed
-function loadFile(path) {
+function loadFile(path, cursor) {
     "use strict";
     var ext = path.split('.').pop().toLowerCase();
     trackChanges(false);
@@ -134,6 +134,10 @@ function loadFile(path) {
         hidePicture();
         $.post('/editor/read', 'path=' + path.split(ROOT).pop(), function (response) {
             editorSetText(response, ext);
+            if (cursor !== undefined) {
+                editor.setCursor(cursor);
+                editor.focus();
+            }
             displayLocation(path);
             trackChanges(true);
         });
@@ -841,6 +845,15 @@ $('#delete-cancel').click(function () {
 // a symlink static/log/public.log to /var/log/uwsgi/public.log
 function doReload() {
     "use strict";
+    var savedPath = $('#path').val(),
+        savedText = (savedPath === '') ? editorGetText() : '',
+        savedCursor = editor.getCursor();
+    console.log('Typeof savedPath=' + typeof savedPath);
+    console.log('savedPath=' + savedPath);
+    console.log('Typeof savedText=' + typeof savedText);
+    console.log('savedText=' + savedText);
+    console.log('Typeof savedCursor=' + typeof savedCursor);
+    console.log('savedCursor=' + JSON.stringify(savedCursor));
     $('#reload-bar').css('width', '0%');
     $.post('/editor/reload', function (response) {
         trackChanges(false);
@@ -855,8 +868,18 @@ function doReload() {
             $('#reload-progress')
                 .removeClass('active')
                 .removeClass('progress-striped');
-            saveMsg('Reloaded pytronics');
-            loadFile(ROOT + 'static/log/public.log');
+            // Check if succeeded, if not show log
+            $.post('/datetime', function (response) {
+                saveMsg('Reloaded pytronics');
+                if (savedPath !== '') {
+                    loadFile(savedPath, savedCursor);
+                } else {
+                    editorSetText(savedText);
+                }
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                saveMsg('Reload pytronics failed - see log');
+                loadFile(ROOT + 'static/log/public.log');
+            });
         });
     }).error(function (jqXHR, textStatus, errorThrown) {
         console.log('reload: ' + textStatus + ': ' + errorThrown);
