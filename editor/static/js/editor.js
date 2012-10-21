@@ -124,7 +124,7 @@ function clearLocation() {
 }
 
 // Load a new picture or file. For files, change tracking is resumed
-function loadFile(path, cursor) {
+function loadFile(path, scroll, cursor) {
     "use strict";
     var ext = path.split('.').pop().toLowerCase();
     trackChanges(false);
@@ -134,6 +134,9 @@ function loadFile(path, cursor) {
         hidePicture();
         $.post('/editor/read', 'path=' + path.split(ROOT).pop(), function (response) {
             editorSetText(response, ext);
+            if (scroll !== undefined) {
+                editor.scrollTo(scroll.x, scroll.y);
+            }
             if (cursor !== undefined) {
                 editor.setCursor(cursor);
                 editor.focus();
@@ -846,14 +849,9 @@ $('#delete-cancel').click(function () {
 function doReload() {
     "use strict";
     var savedPath = $('#path').val(),
-        savedText = (savedPath === '') ? editorGetText() : '',
-        savedCursor = editor.getCursor();
-    console.log('Typeof savedPath=' + typeof savedPath);
-    console.log('savedPath=' + savedPath);
-    console.log('Typeof savedText=' + typeof savedText);
-    console.log('savedText=' + savedText);
-    console.log('Typeof savedCursor=' + typeof savedCursor);
-    console.log('savedCursor=' + JSON.stringify(savedCursor));
+        savedText = (savedPath === '') ? editorGetText() : undefined,
+        savedCursor = editor.getCursor(),
+        savedScroll = editor.getScrollInfo();
     $('#reload-bar').css('width', '0%');
     $.post('/editor/reload', function (response) {
         trackChanges(false);
@@ -872,7 +870,7 @@ function doReload() {
             $.post('/datetime', function (response) {
                 saveMsg('Reloaded pytronics');
                 if (savedPath !== '') {
-                    loadFile(savedPath, savedCursor);
+                    loadFile(savedPath, savedScroll, savedCursor);
                 } else {
                     editorSetText(savedText);
                 }
