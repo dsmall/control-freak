@@ -21,5 +21,5 @@ element to your HTML template after the "rascal-head" include:
             }
         </style>
 
-[about]: /docs/about.md
+[about]: /docs/about-docs.md
 [mws]: http://daringfireball.net/projects/markdown/
