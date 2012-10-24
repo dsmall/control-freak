@@ -121,7 +121,7 @@
                     <div class="span3">
                         <div class="knobframe" style="width: 150px;">
                             <input id="knob_brightness" class="knob" data-width="150" data-height="150" data-displayprevious="true"
-                                data-fgcolor="#aaaaaa" data-skin="tron" data-thickness=".2" data-max="255" value="255">
+                                data-fgcolor="#aaaaaa" data-skin="tron" data-thickness=".2" data-max="100" value="100">
                             <p>Set Brightness</p>
                         </div>
                     </div>
@@ -213,7 +213,11 @@
             if (value < 0) {
                 return 0;
             }
-            if (value > 255) {
+            if (which === 'brightness') {
+                if (value > 100) {
+                    return 100;
+                }
+            } else if (value > 255) {
                 return 255;
             }
             return value;
@@ -221,16 +225,26 @@
 
         function setOutput(r, g, b) {
             "use strict";
-            var sf = getValue('brightness') / 255.0,
-                rs = Math.round(r * sf),
-                gs = Math.round(g * sf),
-                bs = Math.round(b * sf),
-                rgbString = 'rgb(' + r + ',' + g + ',' + b + ')',
-                outputString = 'rgb(' + rs + ',' + gs + ',' + bs + ')';
-            $('#mix').css('background-color', rgbString);
-            $('#output').css('background-color', outputString);
+            var rgbString = 'rgb(' + r + ',' + g + ',' + b + ')',
+                sf = getValue('brightness') / 100.0,
+                asf, rs, gs, bs, outputString;
             console.log('mix ' + rgbString);
+            $('#mix').css('background-color', rgbString);
+            asf = Math.pow(sf, 0.4);
+            console.log('asf output ' + asf);
+            rs = Math.round(r * asf);
+            gs = Math.round(g * asf);
+            bs = Math.round(b * asf);
+            outputString = 'rgb(' + rs + ',' + gs + ',' + bs + ')';
             console.log('output ' + outputString);
+            $('#output').css('background-color', outputString);
+            asf = Math.pow(sf, 1.8);
+            console.log('asf LED ' + asf);
+            rs = Math.round(r * asf);
+            gs = Math.round(g * asf);
+            bs = Math.round(b * asf);
+            outputString = 'rgb(' + rs + ',' + gs + ',' + bs + ')';
+            console.log('LED ' + outputString);
             fadeToRGB(rs, gs, bs);
         }
 
@@ -296,6 +310,7 @@
                         .val(value[2])
                         .trigger('change');
                     initialising = false;
+                    setValues();
                 } else {
                     console.log('i2c_read: [' + result.errorCode + '] ' + result.errorMessage);
                 }
