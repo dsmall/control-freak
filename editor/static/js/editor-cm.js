@@ -160,9 +160,11 @@ function editorSetMode(ext) {
     case 'less':
         mode = 'less';
         break;
+    /*
     case 'md':
         mode = 'markdown';
         break;
+    */
     case 'log':
         mode = 'log';
         break;
