@@ -480,6 +480,35 @@ def flash_led():
         message = "LED on"
     return (message)
 
+# dsmall datalogger
+@rbtimer(30)
+def log_value(num):
+    import datalogger
+    artemp = pytronics.i2cRead(0x48, 0, 'I', 2)
+    ftemp = ((artemp[0] << 4) | (artemp[1] >> 4)) * 0.0625
+    # print '## temp_log ## ' + str(ftemp)
+    datalogger.log(ftemp)
+    
+@cron(-30, -1, -1, -1, -1)
+def update_byhour(num):
+    import datalogger
+    rows = datalogger.update_byhour()
+    if rows != 0:
+        print '## updatelog ## added {0} row(s)'.format(rows)
+
+@public.route('/datalogger.html')
+def datalogger():
+    return render_template('datalogger.html', title='Temperature Log', label0='Temp {0}C'.format(unichr(176)))
+
+@public.route('/getlog', methods=['POST'])
+def getlog():
+    import datalogger
+    try:
+        period = request.form['period']
+    except KeyError:
+        period = 'live'
+    return datalogger.getlog(period)
+
 # dsmall private branch
 @rbtimer(5)
 def toggle_led(num):
@@ -544,30 +573,6 @@ def update_lcd(num):
     ftemp = ((artemp[0] << 4) | (artemp[1] >> 4)) * 0.0625
     writeString('Temp {0:0.1f}'.format(ftemp))
     writeString(chr(0xdf) + 'C')
-
-@rbtimer(30)
-def temp_log(num):
-    import log
-    artemp = pytronics.i2cRead(0x48, 0, 'I', 2)
-    ftemp = ((artemp[0] << 4) | (artemp[1] >> 4)) * 0.0625
-    # print '## temp_log ## ' + str(ftemp)
-    log.temperature(ftemp)
-    
-@cron(-30, -1, -1, -1, -1)
-def update_byhour(num):
-    import log
-    rows = log.update_byhour()
-    if rows != 0:
-        print '## updatelog ## added {0} row(s)'.format(rows)
-
-@public.route('/getlog', methods=['POST'])
-def getlog():
-    import log
-    try:
-        period = request.form['period']
-    except KeyError:
-        period = 'live'
-    return log.getlog(period)
 
 @public.route('/send-to-i2c-lcd', methods=['POST'])
 def send_to_i2c_lcd():
