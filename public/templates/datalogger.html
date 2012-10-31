@@ -26,6 +26,12 @@
         img.led.active {
             opacity: 1;
         }
+        .close {
+            opacity: 0.6;
+        }
+        .close:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +59,8 @@
         </div> <!-- /well -->
 
         <div id="captured-image" class="well rascal alert fade in" style="display:none;">
-            <button type="button" class="close"><img src="/editor/static/images/file-icons/delete.png"></button>
+            <!-- <button type="button" class="close"><img src="/editor/static/images/file-icons/delete.png"></button> -->
+            <img class="close" src="/editor/static/images/file-icons/delete.png">
             <p><small class="status">Right-click chart and choose Save Image As...</small></p>
             <div id="img-container"></div>
         </div> <!-- /well -->
@@ -67,7 +74,7 @@
                 location: "ne"
             },
             series: [
-                { label: "{{ label0 }}", lineWidth: 3, showMarker: false }
+                { label: "{{ label0 }}", lineWidth: 3, showMarker: false, rendererOptions: { smooth: true } }
             ],
             axes: {
                 xaxis: {
@@ -89,10 +96,10 @@
             period = 'live',
             interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000 },
             int_timer,
+            capture_timeout,
             plot1;
 
-        function updateGraph () {
-            $('#capture').attr('disabled', 'disabled');
+        function updateGraph() {
             $('#LED').addClass('active');
             $.post("/getlog", { period: period }, function (response) {
                 var data = $.parseJSON(response);
@@ -102,7 +109,6 @@
                 $('#status').text('Last update ' + new Date());
                 setTimeout(function () {
                     $('#LED').removeClass('active');
-                    $('#capture').removeAttr('disabled');
                 }, 500);
             }).error(function (jqXHR, textStatus, errorThrown) {
                 $('#status').text('Update failed (' + errorThrown + ') ' + new Date());
@@ -110,7 +116,7 @@
             });            
         }
         
-        function captureImage () {
+        function captureImage() {
             var options = {
                     x_offset: 0,
                     y_offset: 0,
@@ -122,15 +128,32 @@
                 .append(imgElem);
             $("#captured-image").fadeTo(250, 1);
         }
+        
+        // If update in progress, wait until finished (max 10s)
+        function captureIfYouCan() {
+            var isBusy = $('#LED').hasClass('active');
+            if (!isBusy) {
+                captureImage();
+            } else {
+                if (capture_timeout < 20) {
+                    capture_timeout += 1;
+                    console.log('Capture Image: waiting for update ' + capture_timeout);
+                    setTimeout(captureIfYouCan, 500);
+                } else {
+                    console.log('Capture Image: timed out waiting for update');
+                }
+            }
+        }
 
         $('.btn').click(function () {
             var which = $(this).attr('value');
             if (which === 'capture') {
-                captureImage();
+                capture_timeout = 0;
+                captureIfYouCan();
             } else {
                 int_timer = clearInterval(int_timer);
                 period = which;
-                console.log('change ' + period + ' (' + (interval[period] / 1000).toString() + ')');
+                console.log('Period set to ' + period + ' (refresh ' + (interval[period] / 1000).toString() + 's)');
                 updateGraph();
                 int_timer = setInterval(updateGraph, interval[period]);
             }
@@ -142,7 +165,9 @@
             updateGraph();
             int_timer = setInterval(updateGraph, interval[period]);
             $('.alert .close').live("click", function(e) {
-                $(this).parent().hide();
+                $(this).parent().fadeTo(350, 0, function () {
+                    $(this).hide();
+                });
             });
         });
     </script>
