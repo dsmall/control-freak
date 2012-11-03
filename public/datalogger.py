@@ -24,6 +24,14 @@ FROM log_byhour
 WHERE logdate >= datetime('now', '-7 days')
 ORDER BY 1;"""
 
+sql_pastyear = """SELECT
+    strftime('%Y-%m-%d 00:00:00 GMT', logdate) AS logdate,
+    avg(value) AS value
+FROM log_byhour
+--WHERE logdate >= datetime('now', '-7 days')
+GROUP BY strftime('%Y-%m-%d', logdate)
+ORDER BY 1;"""
+
 sql_update = """INSERT INTO log_byhour
 (logdate, value)
 SELECT
@@ -46,7 +54,9 @@ def log(value):
 
 def getlog(period):
     import json
-    if period == 'pastweek':
+    if period == 'pastyear':
+        sql = sql_pastyear
+    elif period == 'pastweek':
         sql = sql_pastweek
     elif period == 'pastday':
         sql = sql_pastday

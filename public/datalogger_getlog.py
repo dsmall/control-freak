@@ -8,6 +8,7 @@ import datalogger
 # This function returns a JSON encoded string is normally called from a template
 # (web page) via a $.post request to /getlog in server.py
 
-print datalogger.getlog('live')
+# print datalogger.getlog('live')
 # print datalogger.getlog('pastday')
 # print datalogger.getlog('pastweek')
+print datalogger.getlog('pastyear')

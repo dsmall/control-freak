@@ -46,6 +46,7 @@
                         <button value="live" class="btn btn-default rascal active" style="width: 120px;">Live</button>
                         <button value="pastday" class="btn btn-default rascal" style="width: 120px;">Past Day</button>
                         <button value="pastweek" class="btn btn-default rascal" style="width: 120px;">Past Week</button>
+                        <button value="pastyear" class="btn btn-default rascal" style="width: 120px;">Past Year</button>
                     </div>
                     <img id="LED" src="static/images/led.gif" width="10" class="led" />
                     <small id="status" class="status"></small>
@@ -94,7 +95,8 @@
 
         var
             period = 'live',
-            interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000 },
+            interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000, pastyear: 30*1000 },
+            tickFormat = { live: '%a%n%H:%M', pastday: '%a%n%H:%M', pastweek: '%a%n%H:%M', pastyear: '%e %b%n%Y' },
             int_timer,
             capture_timeout,
             plot1;
@@ -103,6 +105,7 @@
             $('#LED').addClass('active');
             $.post("/getlog", { period: period }, function (response) {
                 var data = $.parseJSON(response);
+                console.log(response);
                 console.log('updateGraph last data ' + data[data.length - 1][0]);
                 $('#chart1').empty();
                 plot1 = $.jqplot('chart1', [data], chartOptions);
@@ -154,6 +157,8 @@
                 int_timer = clearInterval(int_timer);
                 period = which;
                 console.log('Period set to ' + period + ' (refresh ' + (interval[period] / 1000).toString() + 's)');
+                chartOptions.axes.xaxis.tickOptions.formatString = tickFormat[period];
+                console.log(chartOptions.axes.xaxis.tickOptions.formatString);
                 updateGraph();
                 int_timer = setInterval(updateGraph, interval[period]);
             }
