@@ -95,7 +95,7 @@
 
         var
             period = 'live',
-            interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000, pastyear: 30*1000 },
+            interval = { live: 30*1000, pastday: 5*30*1000, pastweek: 30*60*1000, pastyear: 30*60*1000 },
             tickFormat = { live: '%a%n%H:%M', pastday: '%a%n%H:%M', pastweek: '%a%n%H:%M', pastyear: '%e %b%n%Y' },
             int_timer,
             capture_timeout,
@@ -104,11 +104,18 @@
         function updateGraph() {
             $('#LED').addClass('active');
             $.post("/getlog", { period: period }, function (response) {
-                var data = $.parseJSON(response);
-                console.log(response);
-                console.log('updateGraph last data ' + data[data.length - 1][0]);
+                var data = $.parseJSON(response),
+                    series = data.series,
+                    band = data.band;
+                // console.log(response);
+                console.log('updateGraph last data ' + series[series.length - 1][0]);
+                if (band !== undefined) {
+                    chartOptions.series[0].rendererOptions.bandData = band;
+                } else {
+                    delete chartOptions.series[0].rendererOptions.bandData;
+                }
                 $('#chart1').empty();
-                plot1 = $.jqplot('chart1', [data], chartOptions);
+                plot1 = $.jqplot('chart1', [series], chartOptions);
                 $('#status').text('Last update ' + new Date());
                 setTimeout(function () {
                     $('#LED').removeClass('active');

@@ -1,8 +1,6 @@
 import httplib
 import xml.dom.minidom
 
-debug = False
-
 def _getText(nodelist):
     rc = []
     for node in nodelist:
@@ -58,7 +56,3 @@ def getHeadlines(feed):
             headlines = [ { 'title' : 'News not available' } ]
             break
     return headlines
-
-if debug:
-    for headline in getHeadlines(0):
-        print headline

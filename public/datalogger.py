@@ -28,9 +28,17 @@ sql_pastyear = """SELECT
     strftime('%Y-%m-%d 00:00:00 GMT', logdate) AS logdate,
     avg(value) AS value
 FROM log_byhour
---WHERE logdate >= datetime('now', '-7 days')
 GROUP BY strftime('%Y-%m-%d', logdate)
+HAVING logdate < date('now')
 ORDER BY 1;"""
+
+band_pastyear = """SELECT
+    min(value) AS min,
+    max(value) AS max
+FROM log_byhour
+GROUP BY strftime('%Y-%m-%d', logdate)
+HAVING logdate < date('now')
+ORDER BY logdate;"""
 
 sql_update = """INSERT INTO log_byhour
 (logdate, value)
@@ -54,20 +62,30 @@ def log(value):
 
 def getlog(period):
     import json
+    data = {}
     if period == 'pastyear':
         sql = sql_pastyear
+        band = band_pastyear
     elif period == 'pastweek':
         sql = sql_pastweek
+        band = ''
     elif period == 'pastday':
         sql = sql_pastday
+        band = ''
     else:
         sql = sql_live
+        band = ''
     con = sqlite3.connect('/var/log/datalog.db', detect_types=sqlite3.PARSE_DECLTYPES)
     with con:
         c = con.cursor()
         c.execute(sql)
         rr = c.fetchall()
-        return json.dumps(rr)
+        data['series'] = rr
+        if band != '':
+            c.execute(band)
+            rr = c.fetchall()
+            data['band'] = rr
+        return json.dumps(data)
 
 def update_byhour():
     con = sqlite3.connect('/var/log/datalog.db', detect_types=sqlite3.PARSE_DECLTYPES)

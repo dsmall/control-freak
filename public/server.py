@@ -123,7 +123,7 @@ def read_pins():
     for chan in ['A0', 'A1', 'A2', 'A3']:
         analog[chan] = pytronics.analogRead(chan)
     return json.dumps({ 'pins': pins, 'analog': analog })
-
+        
 ### Support for i2c ###
 @public.route('/i2cget/<addr>/<reg>/<mode>')
 def i2cget(addr, reg, mode):
@@ -156,8 +156,6 @@ def i2cset(addr, reg, val, mode):
     except Exception as e:
         return 'Internal server error', 500
 
-# def i2cRead(addr, reg = 0, size = 'B', length = 0):
-# def _i2cRead(addr, reg = 0, size = '', length = 0):
 @public.route('/i2c_read', methods=['POST'])
 def i2c_read():
     import json
@@ -182,8 +180,6 @@ def i2c_read():
     except Exception as e:
         return 'Internal server error', 500
 
-# def i2cWrite(addr, reg, val = '', size = 'B'):
-# def _i2cWrite(addr, reg, value = '', size = 'B'):
 @public.route('/i2c_write', methods=['POST'])
 def i2c_write():
     import json
@@ -212,6 +208,12 @@ def i2cscan():
     from i2c import scanBus
     import json
     return json.dumps(scanBus())
+
+### Support for serial ###
+@public.route('/serial/<port>/<speed>/<message>', methods=['POST'])
+def serial_write(port, speed, message):
+    pytronics.serialWrite(message, speed, port)
+    return 'Tried to write serial data.'
 
 ### Support for SPI bus ###
 @public.route('/spi/<channel>/read')
@@ -303,12 +305,15 @@ def update_relay(num):
 
 @public.route('/sms', methods=['POST'])
 def parse_sms():
-    import subprocess
+    import subprocess, webcolors
     message = request.form['Body']
     print "Received text message: " + str(message)
-    f = open('/var/www/public/thermostat-target.txt', 'w')
-    f.write(str(message))
-    f.close()
+    color = webcolors.name_to_rgb(message)
+    cmd = 'blinkm set-rgb -d 9 -r ' + str(color[0]) + ' -g ' + str(color[1]) + ' -b ' + str(color[2])
+    subprocess.Popen([cmd], shell=True)
+    #f = open('/var/www/public/thermostat-target.txt', 'w')
+    #f.write(str(message))
+    #f.close()
     return ('Message processed')
 
 # lcd (serial)
@@ -479,6 +484,7 @@ def flash_led():
         pytronics.digitalWrite('LED', 'HIGH')
         message = "LED on"
     return (message)
+
 
 # dsmall datalogger
 @rbtimer(30)

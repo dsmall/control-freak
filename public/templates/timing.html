@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Web Performance Timing</title>
+    {% include "include/rascal-head.html" %}
+    <style>
+        #scan_table {
+            margin-bottom: 3px;
+        }
+         #rescan {
+            margin-bottom: 10px;
+        }
+        .well.i2c {
+            color: #F8F8F8;
+            background-color: #333;
+            border-color: #222;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>Web Performance Timing</h1>
+            You can add some text here, or use template variables: {{magic}}
+            <div id="scan_table" class="well i2c">
+                <div style="padding: 151px 400px;"><img src="/static/images/ajax-loader.gif" width="32" height="32"></div>
+            </div>
+        </div>
+    </div>
+    <!-- {% include "include/doc-tab.html" %} --> 
+    <script type="text/javascript">
+        function dump_perf() {
+            return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance || {};
+        }
+        
+        window.onload = function() {
+            setTimeout(function() {
+                "use strict";
+                var
+                    perf = performance,
+                    pt = perf.timing,
+                    s = '<table class="table table-bordered">',
+                    p, t;
+                for (p in perf) {
+                    console.log(p);
+                }
+                for (t in pt) {
+                    s += '<tr><td>' + t + '<\/td>';
+                    s += '<td>' + pt[t] + '<\/td></tr>';
+                }
+                s += '<\/table>';
+                $('#scan_table').html(s);
+                console.log(dump_perf());
+            }, 0);
+        }
+    </script>
+</body>
+</html>
