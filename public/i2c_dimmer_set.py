@@ -22,7 +22,8 @@ i2cWrite(0x40, PCA_INC_ALL | 0, settings, 'I')
 
 settings = i2cRead(0x40, PCA_INC_ALL | 0, 'I', 28)
 
+print "LED Driver PCA9635"
+print "i2c chip address 0x40"
 print 'Register  Name        Value'
 for i in range(len(settings)):
     print '0x{0:02X}      {1:10s}  0x{2:02X}'.format(i, PCA_REGS[i], settings[i])
-
