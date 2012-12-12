@@ -189,10 +189,13 @@ function editorSetMode(ext) {
     case 'log':
         mode = 'log';
         break;
+    case 'rb':
+        mode = 'ruby';
+        break;   
     default:
         mode = 'text';
     }
-    // console.log('mode ' + mode);
+    console.log('mode ' + mode);
     editor.setOption('mode', mode);
     editor.setOption('readOnly', (ext === 'log'));
 }
