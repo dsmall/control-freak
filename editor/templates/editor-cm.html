@@ -47,8 +47,7 @@
         }
 
         .CodeMirror-scroll {
-            /* height: 600px; */
-            height: 475px;
+            /* height: 475px; */
         }
 
         .visibleTabs .cm-tab:after {
@@ -338,12 +337,22 @@
                 dh = (h > (637 + XH)) ? h - (637 + XH) : 0;
                 // console.log('resize ' + dw + ' x ' + dh);
                 $('#filetree').height(455 + dh);
-                $('.CodeMirror-scroll').height(475 + dh);
-                if (rascal.picture.showing) {
-                    $('#frame-p')
-                        .height($('.CodeMirror-scroll').height())
-                        .width($('.CodeMirror-scroll').width());
-                    rascal.picture.resize();
+                if (cmVersion === 2) {
+                    $('.CodeMirror-scroll').height(475 + dh);
+                    if (rascal.picture.showing) {
+                        $('#frame-p')
+                            .height($('.CodeMirror-scroll').height())
+                            .width($('.CodeMirror-scroll').width());
+                        rascal.picture.resize();
+                    }
+                } else {
+                    $('.CodeMirror').height(475 + dh);
+                    if (rascal.picture.showing) {
+                        $('#frame-p')
+                            .height($('.CodeMirror').height())
+                            .width($('.CodeMirror').width());
+                        rascal.picture.resize();
+                    }
                 }
             }
         }

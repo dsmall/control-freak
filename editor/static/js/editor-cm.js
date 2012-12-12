@@ -51,6 +51,9 @@ function setPictureFrameSize(frp) {
         .width($('.CodeMirror-scroll').width());
 }
 
+// Used to identify version specific changes (set by initEditor)
+var cmVersion;
+
 // Support for highlighting active line
 var hlActive = false;
 var hlLine = null;
@@ -59,11 +62,19 @@ var hlLineStyle = "activeline-default";
 function activeline() {
     if (hlActive) {
         if (hlLine !== null) {
-            editor.setLineClass(hlLine, null, null);
+            if (cmVersion === 2) {
+                editor.setLineClass(hlLine, null, null);
+            } else {
+                editor.removeLineClass(hlLine, null, hlLineStyle);
+            }
         } else {
             console.log('WARNING activeline: hlLine is null');
         }
-        hlLine = editor.setLineClass(editor.getCursor().line, null, hlLineStyle);
+        if (cmVersion === 2) {
+            hlLine = editor.setLineClass(editor.getCursor().line, null, hlLineStyle);
+        } else {
+            hlLine = editor.addLineClass(editor.getCursor().line, null, hlLineStyle);
+        }
     }
 }
 
@@ -92,15 +103,27 @@ function initEditor() {
         indentWithTabs: false,
         extraKeys: {
             "Tab": softTabs
-        },
-        onCursorActivity: activeline,
+        }
+//        onCursorActivity: activeline
 //        electricChars: false,
-        onChange: fileChanged
+//        onChange: fileChanged
     });
     if (CodeMirror.version !== undefined) {
         console.log('CodeMirror version: ' + CodeMirror.version);
+        cmVersion = parseInt(CodeMirror.version, 10);
     } else {
         console.log('CodeMirror version: v2.33 or earlier');
+        cmVersion = 2;
+    }
+    if (cmVersion === 2) {
+        $('.CodeMirror-scroll').height(475);
+        editor.setOption('fixedGutter', true);
+        editor.setOption('onCursorActivity', activeline);
+        editor.setOption('onChange', fileChanged);
+    } else {
+        $('.CodeMirror').height(475);
+        editor.on('cursorActivity', activeline);
+        editor.on('change', fileChanged);
     }
 }
 
@@ -306,12 +329,20 @@ function applyHighlightActive() {
         hlActive = preferences.highlightActive;
         if (hlActive) {
             // console.log('+ turning on hlActive');
-            hlLine = editor.setLineClass(editor.getCursor().line, null, hlLineStyle);
+            if (cmVersion === 2) {
+                hlLine = editor.setLineClass(editor.getCursor().line, null, hlLineStyle);
+            } else {
+                hlLine = editor.addLineClass(editor.getCursor().line, null, hlLineStyle);
+            }
         } else {
             // console.log('+ turning off hlActive');
             // Clear current highlight
             if (hlLine !== null) {
-                editor.setLineClass(hlLine, null, null);
+                if (cmVersion === 2) {
+                    editor.setLineClass(hlLine, null, null);
+                } else {
+                    editor.removeLineClass(hlLine, null, null);
+                }
             } else {
                 console.log('+ WARNING hlLine is null');
             }
@@ -328,9 +359,15 @@ function applyLineWrapping() {
 function applyMatchBrackets() {
     "use strict";
     // console.log('applyMatchBrackets ' + preferences.matchBrackets);
-    editor.setOption('matchBrackets', preferences.matchBrackets);
+    if ((cmVersion !== 2) && (editor.getOption('matchBrackets') === undefined)) {
+        console.log('CM version 3: loading matchbrackets.js');
+        $.getScript('/editor/static/codemirror/lib/util/matchbrackets.js', function () {
+            editor.setOption('matchBrackets', preferences.matchBrackets);
+        });
+    } else {
+        editor.setOption('matchBrackets', preferences.matchBrackets);
+    }
 }
-
 
 function setTheme() {
     "use strict";
