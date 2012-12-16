@@ -100,16 +100,24 @@ function hidePicture() {
     }
 }
 
-// Clears file change indicator, saves path
-function displayLocation(path) {
-    "use strict";
-    var fpath = path.split(ROOT).pop(),
-        apath = '#';
-    if (fpath.match(/templates\//)) {
+// Matches 'templates/' at the start of fpath (after root removed)
+function pathToUrl(fpath) {
+    var apath;
+    if (fpath.match(/^templates\//)) {
         apath = fpath.split('templates').pop();
         if (DEBUG_ON_MAC) {
             apath = 'http://localhost:5000' + apath;
         }
+    }
+    return apath;
+}
+
+// Clears file change indicator, saves path
+function displayLocation(path) {
+    "use strict";
+    var fpath = path.split(ROOT).pop(),
+        apath;
+    if (apath = pathToUrl(fpath)) {
         $('#location-bar').html('<a href="' + apath + '">' + fpath + '</a>');
     } else {
         $('#location-bar').text(fpath);
@@ -204,16 +212,17 @@ function displayTree(path) {
         expandedPath: path,
         expandOnce: true,
         extendBindTree: rascal.dnd.bindTree
-    }, function (path) {
-        // If already loaded do nothing
-        // console.log('New path ' + path.split(ROOT).pop());
-        // console.log('Old path ' + $('#path').val());
-        // if (path.split(ROOT).pop() !== $('#path').val()) {
-        if (!bFileChanged) {
+    }, function (path, meta) {
+        var fpath = path.split(ROOT).pop(),
+            apath;
+        // console.log('file click meta ' + meta);
+        if (meta && (apath = pathToUrl(fpath))) {
+            window.open(apath, '_blank');
+        } else if (!bFileChanged) {
             loadFile(path);
         } else {
             var which;
-            if (path.split(ROOT).pop() !== $('#path').val()) {
+            if (fpath !== $('#path').val()) {
                 which = SAVE;
             } else {
                 which = REVERT;
@@ -224,7 +233,6 @@ function displayTree(path) {
                 }
             });
         }
-        // }
     });
 }
 

@@ -86,7 +86,7 @@ if (jQuery) {
                         });
                     }
                     function bindTree(t) {
-                        $(t).find('LI A').bind(o.folderEvent, function () {
+                        $(t).find('LI A').bind(o.folderEvent, function (event) {
                             if (o.expandOnce) {
                                 o.expandedPath = '';
                                 o.expandOnce = false;
@@ -107,7 +107,12 @@ if (jQuery) {
                                     $(this).parent().removeClass('expanded').addClass('collapsed');
                                 }
                             } else {
-                                h($(this).attr('rel'));
+                                //console.log("filetree: " + ((event.which === 1) ? "click" : event.which) + ", "
+                                //    + (event.metaKey ? "meta " : "")
+                                //    + (event.ctrlKey ? "ctrl " : "")
+                                //    + (event.altKey ? "alt " : "")
+                                //    + (event.shiftKey ? "shift " : ""));
+                                h($(this).attr('rel'), event.metaKey || event.ctrlKey || event.shiftKey);
                             }
                             return false;
                         });

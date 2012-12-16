@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!-- 14 Dec 2012 dsmall -->
+<html lang="en">
+<head>
+    <title>Clicking a Filename</title>
+    {% include "include/rascal-head.html" %}
+    <style>
+        span.pass {
+            color: lawngreen;
+        }
+        span.fail {
+            color: orangered;
+        }
+    </style>
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>Clicking a filename in the Editor</h1>
+            <p>Normally, clicking a filename in the filetree loads it into the
+            editor, while clicking the name in the location bar (above the edit
+            pane) navigates to that web page. However this behaviour can be
+            modified by holding down the Shift, Cmd or Ctrl keys when clicking,
+            as shown in the following table:</p>
+            <div>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Where</th>
+                            <th rowspan="2">Action</th>
+                            <th colspan="2">Mac OS X</th>
+                            <th colspan="3">Linux and Windows</th>
+                        </tr>
+                        <tr>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>IE9</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="6">File tree</td>
+                            <td>Click</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Click</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new window</td>
+                        </tr>
+                        <tr>
+                            <td>Cmd-Click</td>
+                            <td>Open in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                            <td>Load in editor</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Cmd-Click</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new window</td>
+                        </tr>
+                        <tr>
+                            <td>Ctrl-Click</td>
+                            <td>Context menu</td>
+                            <td>Context menu</td>
+                            <td>Open in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Ctrl-Click</td>
+                            <td>Context menu</td>
+                            <td>Context menu</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="6">Location bar</td>
+                            <td>Click</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Click</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                        </tr>
+                        <tr>
+                            <td>Cmd-Click</td>
+                            <td>Open in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                            <td>Replace editor</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Cmd-Click</td>
+                            <td>Display in new tab</td>
+                            <td>Open in new tab</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                            <td>Display in new window</td>
+                        </tr>
+                        <tr>
+                            <td>Ctrl-Click</td>
+                            <td>Context menu</td>
+                            <td>Context menu</td>
+                            <td>Open in new tab</td>
+                            <td>Open in new tab</td>
+                            <td>Open in new tab</td>
+                        </tr>
+                        <tr>
+                            <td>Shift-Ctrl-Click</td>
+                            <td>Context menu</td>
+                            <td>Context menu</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                            <td>Display in new tab</td>
+                        </tr>
+                    </tbody>
+                </table>    
+            </div>
+            <small>
+                <p>Assumes default browser settings</p>
+                <blockquote>
+                    <dl>
+                        <dt>Load in editor</dt>
+                        <dd>Replace the content of the edit pane with the selected file.
+                            Warning if changes will be overwritten</dd>
+                        <dt>Replace editor</dt>
+                        <dd>Navigate to the selected file, replacing the editor in that tab or window</dd>
+                        <dt>Open in new tab</dt>
+                        <dd>Navigate to the selected file in a new tab but do not bring to the front</dd>
+                        <dt>Display in new tab</dt>
+                        <dd>Navigate to the selected file in a new tab and bring to the front</dd>
+                        <dt>Display in window</dt>
+                        <dd>Navigate to the selected file in a window, bringing it to the front</dd>
+                        <dt>Context menu</dt>
+                        <dd>Display the browser's context menu (same as right-click)</dd>
+                    </dl>
+                </blockquote>
+            </small>
+        </div>
+    </div>
+ </body>
+</html>
