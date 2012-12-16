@@ -81,7 +81,14 @@
                 {%- endfor %}
                 <br class="endcolumns" />
             </div> <!-- /well columnwrapper -->
-            <p><small>You can return to this page by clicking the rascal micro logo in the header</small></p>
+            <div class="row-fluid">
+                <div class="span9">
+                    <p><small>You can return to this page by clicking the rascal micro logo in the header</small></p>
+                </div>
+                <div class="span3">
+                    <p style="float: right;"><small><span id="uptime"></span></small></p>
+                </div>
+            </div> <!-- /row-fluid -->
         </div> <!-- /well rascal -->
     </div> <!-- /container -->
     <script type="text/javascript">
@@ -116,6 +123,9 @@
                 }
                 lastResponse = response;
                 console.log('last=' + lastResponse + ' int=' + interval);
+            });
+            $.post('/uptime', function (response) {
+                $('#uptime').text(response);
             });
         }
 

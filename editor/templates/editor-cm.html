@@ -353,6 +353,8 @@
                             .height($('.CodeMirror').height())
                             .width($('.CodeMirror').width());
                         rascal.picture.resize();
+                    } else {
+                        editor.refresh();
                     }
                 }
             }

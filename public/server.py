@@ -564,21 +564,22 @@ def reload():
         return 'Bad request', 400
     return 'OK', 200
 
-headlines = ['No news']
-lastUpdate = 12
+@public.route('/uptime', methods=['POST'])
+def uptime():
+    from datetime import timedelta
+    with open('/proc/uptime', 'r') as f:
+        uptime_secs = float(f.readline().split()[0])
+        td = timedelta(seconds = uptime_secs)
+    return 'Up {0:d}d {1:02d}:{2:02d}:{3:02d}'.format(td.days,
+        td.seconds//(60*60), (td.seconds%(60*60))//60, td.seconds%60)
 
 @rbtimer(5)
 def update_lcd(num):
     from i2c_lcd import reset, writeString, setCursor
-    from datetime import timedelta
     reset()
 #    localtime = time.localtime()
 #    writeString(time.strftime('%H:%M:%S %Z', localtime))
-    with open('/proc/uptime', 'r') as f:
-        uptime = float(f.readline().split()[0])
-        td = timedelta(seconds = uptime)
-    writeString('Up {0:d}d {1:02d}:{2:02d}:{3:02d}'.format(td.days,
-        td.seconds//(60*60), (td.seconds%(60*60))//60, td.seconds%60))
+    writeString(uptime())
     setCursor(1, 0)
     artemp = pytronics.i2cRead(0x48, 0, 'I', 2)
     ftemp = ((artemp[0] << 4) | (artemp[1] >> 4)) * 0.0625
