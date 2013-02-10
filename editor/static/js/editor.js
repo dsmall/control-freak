@@ -90,6 +90,7 @@ function showPicture(path) {
     rp.caption = 'location-bar';
     rp.show(fpath);
     $('#path').val(fpath);
+    $(document).attr('title', 'Edit - ' + fpath.split('/').pop());
 }
 
 function hidePicture() {
@@ -123,6 +124,7 @@ function displayLocation(path) {
         $('#location-bar').text(fpath);
     }
     $('#path').val(fpath);
+    $(document).attr('title', 'Edit - ' + fpath.split('/').pop());
 }
 
 function clearLocation() {

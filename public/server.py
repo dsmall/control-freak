@@ -90,7 +90,7 @@ def get_markdown():
 
 ### Support for pins ###
 def toggle_pin(pin):
-    if pytronics.digitalRead(pin) == '1':
+    if pytronics.digitalRead(pin):
         pytronics.digitalWrite(pin, 'LOW')
     else:
         pytronics.digitalWrite(pin, 'HIGH')
@@ -477,7 +477,7 @@ def clear_directory():
 # Called from hello.html
 @public.route('/flash_led', methods=['POST'])
 def flash_led():
-    if pytronics.digitalRead('LED') == '1':
+    if pytronics.digitalRead('LED'):
         pytronics.digitalWrite('LED', 'LOW')
         message = "LED off"
     else:
@@ -517,7 +517,7 @@ def getlog():
 # dsmall private branch
 @rbtimer(5)
 def toggle_led(num):
-    if pytronics.digitalRead('LED') == '1':
+    if pytronics.digitalRead('LED'):
         pytronics.digitalWrite('LED', 'LOW')
     else:
         pytronics.digitalWrite('LED', 'HIGH')
@@ -540,7 +540,7 @@ def scope_analog():
         ad_ref = float(request.form['adref'])
     except KeyError:
         ad_ref = 3.3
-    if pytronics.digitalRead('LED') == '1':
+    if pytronics.digitalRead('LED'):
         strLED = 'LED is on'
     else:
         strLED = 'LED is off'
