@@ -3,6 +3,25 @@ from uwsgidecorators import *
 import pytronics
 import os, time
 
+# Support multiple environments 
+(RASCAL, MAC, WINDOWS) = (range(0, 3))
+
+### Define environment here
+env = RASCAL
+### End define
+
+if env == WINDOWS:
+    ROOT = 'c:/www/public/'
+    EDITOR = 'http://localhost:5001/editor/'
+elif env == MAC:
+    ROOT = '/var/www/public/'
+    EDITOR = 'http://localhost:5001/editor/'
+else:
+    from uwsgidecorators import *
+    import pytronics
+    ROOT = '/var/www/public/'
+    EDITOR = '/editor/'
+
 public = Flask(__name__)
 public.config['PROPAGATE_EXCEPTIONS'] = True
 
@@ -28,7 +47,7 @@ def default_page():
             name = f.read().strip().capitalize()
     except:
         name = 'Rascal'
-    return render_template('/index.html', hostname=name, template_list=get_public_templates())
+    return render_template('/index.html', hostname=name, editor=EDITOR, template_list=get_public_templates())
 
 def get_public_templates():
     r = []
@@ -52,6 +71,17 @@ def datetime():
     except:
         format = '%d %b %Y %H:%M %Z'
     return time.strftime(format, time.localtime())
+
+@public.route('/uptime', methods=['POST'])
+def uptime():
+    if env == RASCAL:
+        from datetime import timedelta
+        with open('/proc/uptime', 'r') as f:
+            uptime_secs = float(f.readline().split()[0])
+            td = timedelta(seconds = uptime_secs)
+            return 'Up {0:d}d {1:02d}:{2:02d}:{3:02d}'.format(td.days,
+                td.seconds//(60*60), (td.seconds%(60*60))//60, td.seconds%60)
+    return ''
 
 ### Generic HTML and Markdown templates, support for doc tab ###
 @public.route('/<template_name>.html')
@@ -564,15 +594,6 @@ def reload():
         return 'Bad request', 400
     return 'OK', 200
 
-@public.route('/uptime', methods=['POST'])
-def uptime():
-    from datetime import timedelta
-    with open('/proc/uptime', 'r') as f:
-        uptime_secs = float(f.readline().split()[0])
-        td = timedelta(seconds = uptime_secs)
-    return 'Up {0:d}d {1:02d}:{2:02d}:{3:02d}'.format(td.days,
-        td.seconds//(60*60), (td.seconds%(60*60))//60, td.seconds%60)
-
 @rbtimer(5)
 def update_lcd(num):
     from i2c_lcd import reset, writeString, setCursor
@@ -702,6 +723,7 @@ def dimmer():
     except Exception as e:
         print '## dimmer ##: {0}'.format(e)
     return 'Internal server error', 500
+
 # end dsmall private
 
 if __name__ == "__main__":

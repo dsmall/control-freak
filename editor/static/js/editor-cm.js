@@ -173,6 +173,9 @@ function editorSetMode(ext) {
     case 'js':
         mode = 'javascript';
         break;
+    case 'json':
+            mode = {name: 'javascript', json: true};
+        break;
     case 'py':
         mode = 'python';
         break;

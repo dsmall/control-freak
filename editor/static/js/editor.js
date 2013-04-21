@@ -543,7 +543,7 @@ function uploadInit(files, dst) {
     // set up postUrl, allowed types, progress, status and complete
     ru.postUrl = '/editor/xupload';
     ru.allowedTypes = [ 'image/', 'text/html', 'text/css', 'text/javascript',
-        'application/x-javascript', 'text/x-python-script' ];
+        'application/x-javascript', 'text/x-python-script', 'application/json' ];
     ru.progress = saveProgress;
     $('#save-bar').css('width', '0%');
     $('#save-progress')

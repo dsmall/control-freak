@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Keyboard Studies</title>
+    {% include "include/rascal-head.html" %}
+</head>
+<body>
+    {% include "include/rascal-topbar.html" %}
+    <div class="container">
+        <div class="well rascal">
+            <h1>Keyboard Studies</h1>
+            <input id="whichkey" value="type something">
+            <div id="log"></div>
+        </div>
+    </div>
+    <!-- {% include "include/doc-tab.html" %} --> 
+    <script type="text/javascript">
+        $('#whichkey').bind('keydown',function(e){
+            $('#log').html(e.type + ': ' +  e.which + ", "
+            + (e.metaKey ? "meta " : "")
+            + (e.ctrlKey ? "ctrl " : "")
+            + (e.altKey ? "alt " : "")
+            + (e.shiftKey ? "shift " : ""));
+        });
+    </script>
+</body>
+</html>
